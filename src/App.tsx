@@ -7,7 +7,6 @@ import {
   BarChart3,
   Boxes,
   ClipboardCheck,
-  LayoutDashboard,
   ListTodo,
   PackageSearch,
 } from "lucide-react";
@@ -17,6 +16,7 @@ import "./App.css";
 import { Layout } from "./components/refine-ui/layout/layout";
 import { Toaster } from "./components/refine-ui/notification/toaster";
 import { ThemeProvider } from "./components/refine-ui/theme/theme-provider";
+import { BranchCommandCenter } from "./pages/overview";
 import { PlaceholderPage } from "./pages/placeholder-page";
 
 const resources = [
@@ -51,14 +51,7 @@ function App() {
               <Route index element={<Navigate to="/overview" replace />} />
               <Route
                 path="/overview"
-                element={
-                  <PlaceholderPage
-                    icon={LayoutDashboard}
-                    eyebrow="Command workspace"
-                    title="Overview"
-                    description="Your operational starting point for inventory health, expiry exposure, FIFO performance, and branch priorities."
-                  />
-                }
+                element={<BranchCommandCenter />}
               />
               <Route
                 path="/actions"
