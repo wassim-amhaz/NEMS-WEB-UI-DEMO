@@ -8,7 +8,6 @@ import {
   Boxes,
   ClipboardCheck,
   ListTodo,
-  PackageSearch,
 } from "lucide-react";
 import { BrowserRouter, Navigate, Outlet, Route, Routes } from "react-router";
 
@@ -18,6 +17,8 @@ import { Toaster } from "./components/refine-ui/notification/toaster";
 import { ThemeProvider } from "./components/refine-ui/theme/theme-provider";
 import { OverviewPage } from "./pages/overview";
 import { PlaceholderPage } from "./pages/placeholder-page";
+import { ProductIntelligencePlaceholder } from "./pages/products/detail";
+import { MasterProductsPage } from "./pages/products";
 
 const resources = [
   { name: "overview", list: "/overview", meta: { label: "Overview" } },
@@ -75,17 +76,13 @@ function App() {
                   />
                 }
               />
-              <Route
-                path="/products"
-                element={
-                  <PlaceholderPage
-                    icon={PackageSearch}
-                    eyebrow="Intelligence"
-                    title="Products"
-                    description="A product intelligence view for inventory position, movement, exposure, and performance."
-                  />
-                }
-              />
+              <Route path="/products">
+                <Route index element={<MasterProductsPage />} />
+                <Route
+                  path=":id"
+                  element={<ProductIntelligencePlaceholder />}
+                />
+              </Route>
               <Route
                 path="/analytics"
                 element={
