@@ -1,154 +1,142 @@
-import { UserAvatar } from "@/components/refine-ui/layout/user-avatar";
+import {
+  Bell,
+  CalendarDays,
+  ChevronDown,
+  CircleHelp,
+  LogOut,
+  Search,
+  Settings,
+} from "lucide-react";
+
 import { ThemeToggle } from "@/components/refine-ui/theme/theme-toggle";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
-import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
 import {
-  useActiveAuthProvider,
-  useLogout,
-  useRefineOptions,
-} from "@refinedev/core";
-import { LogOutIcon } from "lucide-react";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 
-export const Header = () => {
-  const { isMobile } = useSidebar();
+export const Header = () => (
+  <header className="sticky top-0 z-40 flex h-[4.25rem] shrink-0 items-center gap-2 border-b border-border/80 bg-card/95 px-3 backdrop-blur sm:gap-3 sm:px-5">
+    <SidebarTrigger className="size-9 shrink-0 text-muted-foreground" />
 
-  return <>{isMobile ? <MobileHeader /> : <DesktopHeader />}</>;
-};
-
-function DesktopHeader() {
-  return (
-    <header
-      className={cn(
-        "sticky",
-        "top-0",
-        "flex",
-        "h-16",
-        "shrink-0",
-        "items-center",
-        "gap-4",
-        "border-b",
-        "border-border",
-        "bg-sidebar",
-        "pr-3",
-        "justify-end",
-        "z-40"
-      )}
-    >
-      <ThemeToggle />
-      <UserDropdown />
-    </header>
-  );
-}
-
-function MobileHeader() {
-  const { open, isMobile } = useSidebar();
-
-  const { title } = useRefineOptions();
-
-  return (
-    <header
-      className={cn(
-        "sticky",
-        "top-0",
-        "flex",
-        "h-12",
-        "shrink-0",
-        "items-center",
-        "gap-2",
-        "border-b",
-        "border-border",
-        "bg-sidebar",
-        "pr-3",
-        "justify-between",
-        "z-40"
-      )}
-    >
-      <SidebarTrigger
-        className={cn("text-muted-foreground", "rotate-180", "ml-1", {
-          "opacity-0": open,
-          "opacity-100": !open || isMobile,
-          "pointer-events-auto": !open || isMobile,
-          "pointer-events-none": open && !isMobile,
-        })}
-      />
-
-      <div
-        className={cn(
-          "whitespace-nowrap",
-          "flex",
-          "flex-row",
-          "h-full",
-          "items-center",
-          "justify-start",
-          "gap-2",
-          "transition-discrete",
-          "duration-200",
-          {
-            "pl-3": !open,
-            "pl-5": open,
-          }
-        )}
+    <Select defaultValue="downtown">
+      <SelectTrigger
+        aria-label="Select branch"
+        className="h-9 w-[9.25rem] border-border/80 bg-background shadow-none sm:w-[11rem]"
       >
-        <div>{title.icon}</div>
-        <h2
-          className={cn(
-            "text-sm",
-            "font-bold",
-            "transition-opacity",
-            "duration-200",
-            {
-              "opacity-0": !open,
-              "opacity-100": open,
-            }
-          )}
-        >
-          {title.text}
-        </h2>
-      </div>
+        <SelectValue placeholder="Select branch" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="downtown">Downtown Branch</SelectItem>
+        <SelectItem value="north">North Branch</SelectItem>
+        <SelectItem value="airport">Airport Branch</SelectItem>
+      </SelectContent>
+    </Select>
 
-      <ThemeToggle className={cn("h-8", "w-8")} />
-    </header>
-  );
-}
+    <div className="relative hidden max-w-xl flex-1 md:block">
+      <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+      <Input
+        aria-label="Global search"
+        placeholder="Search products, batches, or actions..."
+        className="h-9 border-border/80 bg-background pl-9 pr-14 shadow-none"
+      />
+      <kbd className="pointer-events-none absolute right-2.5 top-1/2 hidden -translate-y-1/2 rounded border bg-muted px-1.5 py-0.5 font-sans text-[0.65rem] text-muted-foreground lg:inline-flex">
+        Ctrl K
+      </kbd>
+    </div>
 
-const UserDropdown = () => {
-  const { mutate: logout, isPending: isLoggingOut } = useLogout();
+    <div className="ml-auto flex items-center gap-1 sm:gap-1.5">
+      <Button
+        variant="outline"
+        className="hidden h-9 gap-2 border-border/80 bg-background px-3 font-normal shadow-none lg:flex"
+      >
+        <CalendarDays className="size-4 text-muted-foreground" />
+        <span>Last 30 days</span>
+        <ChevronDown className="size-3.5 text-muted-foreground" />
+      </Button>
 
-  const authProvider = useActiveAuthProvider();
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="relative size-9"
+            aria-label="Notifications"
+          >
+            <Bell className="size-[1.1rem]" />
+            <span className="absolute right-1.5 top-1.5 size-2 rounded-full bg-amber-500 ring-2 ring-card" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-72">
+          <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <div className="px-3 py-5 text-center text-sm text-muted-foreground">
+            Operational alerts will appear here.
+          </div>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
-  if (!authProvider?.getIdentity) {
-    return null;
-  }
+      <ThemeToggle className="size-9 rounded-md border-0" />
 
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger>
-        <UserAvatar />
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem
-          onClick={() => {
-            logout();
-          }}
-        >
-          <LogOutIcon
-            className={cn("text-destructive", "hover:text-destructive")}
-          />
-          <span className={cn("text-destructive", "hover:text-destructive")}>
-            {isLoggingOut ? "Logging out..." : "Logout"}
-          </span>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-};
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            className="h-10 gap-2 px-1.5 sm:pr-2"
+            aria-label="Open user menu"
+          >
+            <Avatar className="size-8 border">
+              <AvatarFallback className="bg-primary/10 text-xs font-semibold text-primary">
+                RM
+              </AvatarFallback>
+            </Avatar>
+            <span className="hidden min-w-0 text-left xl:block">
+              <span className="block truncate text-sm font-medium leading-4">
+                Rana Mansour
+              </span>
+              <span className="block truncate text-[0.68rem] leading-4 text-muted-foreground">
+                Operations Manager
+              </span>
+            </span>
+            <ChevronDown className="hidden size-3.5 text-muted-foreground xl:block" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuLabel>
+            <span className="block text-sm">Rana Mansour</span>
+            <span className="block text-xs font-normal text-muted-foreground">
+              rana@nems.demo
+            </span>
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem>
+            <Settings /> Preferences
+          </DropdownMenuItem>
+          <DropdownMenuItem>
+            <CircleHelp /> Help & support
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem className="text-destructive focus:text-destructive">
+            <LogOut /> Sign out
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  </header>
+);
 
 Header.displayName = "Header";
-MobileHeader.displayName = "MobileHeader";
-DesktopHeader.displayName = "DesktopHeader";

@@ -33,13 +33,15 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
       variant="outline"
       size="icon"
       onClick={cycleTheme}
+      aria-label={`Theme: ${theme}. Change theme`}
+      title={`Theme: ${theme}`}
       className={cn(
         "rounded-full",
         "border-sidebar-border",
         "bg-transparent",
-        className,
         "h-10",
-        "w-10"
+        "w-10",
+        className
       )}
     >
       <Sun

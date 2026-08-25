@@ -1,109 +1,133 @@
-import { GitHubBanner, Refine } from "@refinedev/core";
-import { DevtoolsPanel, DevtoolsProvider } from "@refinedev/devtools";
-import { RefineKbar, RefineKbarProvider } from "@refinedev/kbar";
-
+import { Refine } from "@refinedev/core";
 import routerProvider, {
   DocumentTitleHandler,
-  NavigateToResource,
   UnsavedChangesNotifier,
 } from "@refinedev/react-router";
-import { BrowserRouter, Outlet, Route, Routes } from "react-router";
+import {
+  BarChart3,
+  Boxes,
+  ClipboardCheck,
+  LayoutDashboard,
+  ListTodo,
+  PackageSearch,
+} from "lucide-react";
+import { BrowserRouter, Navigate, Outlet, Route, Routes } from "react-router";
+
 import "./App.css";
-import { ErrorComponent } from "./components/refine-ui/layout/error-component";
 import { Layout } from "./components/refine-ui/layout/layout";
 import { Toaster } from "./components/refine-ui/notification/toaster";
-import { useNotificationProvider } from "./components/refine-ui/notification/use-notification-provider";
 import { ThemeProvider } from "./components/refine-ui/theme/theme-provider";
-import {
-  BlogPostCreate,
-  BlogPostEdit,
-  BlogPostList,
-  BlogPostShow,
-} from "./pages/blog-posts";
-import {
-  CategoryCreate,
-  CategoryEdit,
-  CategoryList,
-  CategoryShow,
-} from "./pages/categories";
-import { dataProvider } from "./providers/data";
+import { PlaceholderPage } from "./pages/placeholder-page";
+
+const resources = [
+  { name: "overview", list: "/overview", meta: { label: "Overview" } },
+  { name: "actions", list: "/actions", meta: { label: "Action Center" } },
+  { name: "batches", list: "/batches", meta: { label: "Batches" } },
+  { name: "products", list: "/products", meta: { label: "Products" } },
+  { name: "analytics", list: "/analytics", meta: { label: "Analytics" } },
+  { name: "audits", list: "/audits", meta: { label: "Audits" } },
+];
 
 function App() {
   return (
     <BrowserRouter>
-      <GitHubBanner />
-      <RefineKbarProvider>
-        <ThemeProvider>
-          <DevtoolsProvider>
-            <Refine
-              notificationProvider={useNotificationProvider()}
-              routerProvider={routerProvider}
-              dataProvider={dataProvider}
-              resources={[
-                {
-                  name: "blog_posts",
-                  list: "/blog-posts",
-                  create: "/blog-posts/create",
-                  edit: "/blog-posts/edit/:id",
-                  show: "/blog-posts/show/:id",
-                  meta: {
-                    canDelete: true,
-                  },
-                },
-                {
-                  name: "categories",
-                  list: "/categories",
-                  create: "/categories/create",
-                  edit: "/categories/edit/:id",
-                  show: "/categories/show/:id",
-                  meta: {
-                    canDelete: true,
-                  },
-                },
-              ]}
-              options={{
-                syncWithLocation: true,
-                warnWhenUnsavedChanges: true,
-                projectId: "oCGDqg-th0ye3-rWVzxk",
-              }}
+      <ThemeProvider storageKey="nems-ui-theme">
+        <Refine
+          routerProvider={routerProvider}
+          resources={resources}
+          options={{
+            syncWithLocation: true,
+            warnWhenUnsavedChanges: true,
+          }}
+        >
+          <Routes>
+            <Route
+              element={
+                <Layout>
+                  <Outlet />
+                </Layout>
+              }
             >
-              <Routes>
-                <Route
-                  element={
-                    <Layout>
-                      <Outlet />
-                    </Layout>
-                  }
-                >
-                  <Route
-                    index
-                    element={<NavigateToResource resource="blog_posts" />}
+              <Route index element={<Navigate to="/overview" replace />} />
+              <Route
+                path="/overview"
+                element={
+                  <PlaceholderPage
+                    icon={LayoutDashboard}
+                    eyebrow="Command workspace"
+                    title="Overview"
+                    description="Your operational starting point for inventory health, expiry exposure, FIFO performance, and branch priorities."
                   />
-                  <Route path="/blog-posts">
-                    <Route index element={<BlogPostList />} />
-                    <Route path="create" element={<BlogPostCreate />} />
-                    <Route path="edit/:id" element={<BlogPostEdit />} />
-                    <Route path="show/:id" element={<BlogPostShow />} />
-                  </Route>
-                  <Route path="/categories">
-                    <Route index element={<CategoryList />} />
-                    <Route path="create" element={<CategoryCreate />} />
-                    <Route path="edit/:id" element={<CategoryEdit />} />
-                    <Route path="show/:id" element={<CategoryShow />} />
-                  </Route>
-                  <Route path="*" element={<ErrorComponent />} />
-                </Route>
-              </Routes>
+                }
+              />
+              <Route
+                path="/actions"
+                element={
+                  <PlaceholderPage
+                    icon={ListTodo}
+                    eyebrow="Operations"
+                    title="Action Center"
+                    description="A focused workspace for the exceptions and follow-ups that need operational attention."
+                  />
+                }
+              />
+              <Route
+                path="/batches"
+                element={
+                  <PlaceholderPage
+                    icon={Boxes}
+                    eyebrow="Operations"
+                    title="Batches"
+                    description="The future home for batch-level stock visibility, expiry status, and FIFO execution."
+                  />
+                }
+              />
+              <Route
+                path="/products"
+                element={
+                  <PlaceholderPage
+                    icon={PackageSearch}
+                    eyebrow="Intelligence"
+                    title="Products"
+                    description="A product intelligence view for inventory position, movement, exposure, and performance."
+                  />
+                }
+              />
+              <Route
+                path="/analytics"
+                element={
+                  <PlaceholderPage
+                    icon={BarChart3}
+                    eyebrow="Intelligence"
+                    title="Analytics"
+                    description="A reporting surface for loss trends, expiry risk, FIFO adherence, and operational outcomes."
+                  />
+                }
+              />
+              <Route
+                path="/audits"
+                element={
+                  <PlaceholderPage
+                    icon={ClipboardCheck}
+                    eyebrow="Control"
+                    title="Audits"
+                    description="A control workspace for review history, accountability, and operational traceability."
+                  />
+                }
+              />
+              <Route path="*" element={<Navigate to="/overview" replace />} />
+            </Route>
+          </Routes>
 
-              <Toaster />
-              <RefineKbar />
-              <UnsavedChangesNotifier />
-              <DocumentTitleHandler />
-            </Refine>
-            <DevtoolsPanel />
-          </DevtoolsProvider>
-        </ThemeProvider>
-      </RefineKbarProvider>
+          <Toaster />
+          <UnsavedChangesNotifier />
+          <DocumentTitleHandler
+            handler={({ resource }) =>
+              `${resource?.meta?.label ?? "Overview"} | NEMS`
+            }
+          />
+        </Refine>
+      </ThemeProvider>
     </BrowserRouter>
   );
 }
