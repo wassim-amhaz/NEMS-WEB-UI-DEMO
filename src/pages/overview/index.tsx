@@ -39,6 +39,7 @@ import {
   type AttentionWindow,
   type RankedLossProduct,
 } from "@/mock/dashboard";
+import { MultiBranchCommandCenter } from "./multi-branch";
 
 const currency = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -98,6 +99,16 @@ const chartConfig = {
   expiry: { label: "Expiry", color: "var(--chart-5)" },
   early: { label: "Early removal", color: "var(--chart-4)" },
 } satisfies ChartConfig;
+
+export function OverviewPage() {
+  const { isAllBranches } = useBranch();
+
+  return isAllBranches ? (
+    <MultiBranchCommandCenter />
+  ) : (
+    <BranchCommandCenter />
+  );
+}
 
 export function BranchCommandCenter() {
   const { selectedBranch } = useBranch();

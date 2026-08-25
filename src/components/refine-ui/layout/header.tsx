@@ -8,7 +8,10 @@ import {
   Settings,
 } from "lucide-react";
 
-import { useBranch } from "@/components/nems/branch-context";
+import {
+  ALL_BRANCHES_ID,
+  useBranch,
+} from "@/components/nems/branch-context";
 import { ThemeToggle } from "@/components/refine-ui/theme/theme-toggle";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -46,6 +49,7 @@ export const Header = () => {
           <SelectValue placeholder="Select branch" />
         </SelectTrigger>
         <SelectContent>
+          <SelectItem value={ALL_BRANCHES_ID}>All Branches</SelectItem>
           {branches.map((branch) => (
             <SelectItem key={branch.id} value={branch.id}>
               {branch.name}
