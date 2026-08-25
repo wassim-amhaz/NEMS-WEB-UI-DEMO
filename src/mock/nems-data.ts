@@ -23,11 +23,15 @@ export type Supplier = {
 export type Product = {
   id: string;
   sku: string;
+  barcode: string;
   name: string;
   categoryId: string;
   supplierId: string;
   nemsTracked: boolean;
   trackedBranchIds: string[];
+  availableBranchIds: string[];
+  demoTier: "primary" | "background";
+  removeBeforeDays: number | null;
   unitCost: number;
   salesVelocity: Record<string, number>;
 };
@@ -136,7 +140,14 @@ export const suppliers: Supplier[] = [
 
 type ProductSeed = Omit<
   Product,
-  "id" | "sku" | "salesVelocity" | "trackedBranchIds"
+  | "id"
+  | "sku"
+  | "barcode"
+  | "salesVelocity"
+  | "trackedBranchIds"
+  | "availableBranchIds"
+  | "demoTier"
+  | "removeBeforeDays"
 > & {
   baseVelocity: number;
 };
@@ -201,9 +212,34 @@ const branchTrackingExclusions: Record<string, Set<number>> = {
   "br-hamra": new Set([4, 32]),
 };
 
-export const products: Product[] = productSeeds.map((seed, productIndex) => ({
+const removeBeforeDaysByCategory: Record<string, number> = {
+  "cat-dairy": 4,
+  "cat-produce": 2,
+  "cat-meat": 2,
+  "cat-bakery": 1,
+  "cat-prepared": 2,
+  "cat-beverages": 3,
+  "cat-pantry": 7,
+  "cat-frozen": 10,
+  "cat-household": 14,
+};
+
+function createBarcode(productIndex: number) {
+  const body = `629110${String(200000 + productIndex).padStart(6, "0")}`;
+  const sum = body
+    .split("")
+    .reduce(
+      (total, digit, index) =>
+        total + Number(digit) * (index % 2 === 0 ? 1 : 3),
+      0
+    );
+  return `${body}${(10 - (sum % 10)) % 10}`;
+}
+
+const primaryProducts: Product[] = productSeeds.map((seed, productIndex) => ({
   id: `prd-${String(productIndex + 1).padStart(3, "0")}`,
   sku: `NMS-${String(1001 + productIndex)}`,
+  barcode: createBarcode(productIndex + 1),
   name: seed.name,
   categoryId: seed.categoryId,
   supplierId: seed.supplierId,
@@ -216,6 +252,11 @@ export const products: Product[] = productSeeds.map((seed, productIndex) => ({
         )
         .map((branch) => branch.id)
     : [],
+  availableBranchIds: branches.map((branch) => branch.id),
+  demoTier: "primary",
+  removeBeforeDays: seed.nemsTracked
+    ? removeBeforeDaysByCategory[seed.categoryId] + (productIndex % 2)
+    : null,
   unitCost: seed.unitCost,
   salesVelocity: Object.fromEntries(
     branches.map((branch, branchIndex) => [
@@ -230,6 +271,178 @@ export const products: Product[] = productSeeds.map((seed, productIndex) => ({
     ])
   ),
 }));
+
+const GENERATED_PRODUCT_COUNT = 452;
+const GENERATED_TRACKED_COUNT = 110;
+
+const generatedBrands = [
+  "Cedars",
+  "Bayt",
+  "Levant",
+  "Harvest",
+  "Daily",
+  "Orchard",
+  "Nour",
+  "Saha",
+  "Prime",
+  "Maza",
+  "Coastal",
+  "Market Select",
+];
+
+const generatedNamesByCategory: Record<string, string[]> = {
+  "cat-dairy": ["Labneh", "Plain Yogurt", "Low-Fat Milk", "Halloumi", "Ayran", "Cream Cheese", "Chocolate Milk", "Mozzarella", "Kashkaval", "Cooking Cream", "Goat Yogurt", "Unsalted Butter"],
+  "cat-produce": ["Cucumbers", "Roma Tomatoes", "Green Apples", "Red Grapes", "Romaine Hearts", "Fresh Mint", "Sweet Peppers", "Zucchini", "Pears", "Mushrooms", "Potatoes", "Oranges"],
+  "cat-meat": ["Chicken Thighs", "Beef Kofta", "Turkey Breast", "Sea Bass Fillet", "Beef Striploin", "Chicken Drumsticks", "Shrimp", "Lamb Mince", "Smoked Turkey", "Tuna Steak", "Beef Sausages", "Chicken Escalope"],
+  "cat-bakery": ["White Toast", "Mini Croissants", "Sesame Kaak", "Sourdough Loaf", "Arabic Bread", "Chocolate Muffins", "Multigrain Rolls", "Ciabatta", "Cheese Manoushe", "Mini Baguettes", "Cinnamon Rolls", "Burger Buns"],
+  "cat-prepared": ["Tabbouleh Bowl", "Chicken Caesar Wrap", "Pasta Salad", "Lentil Soup", "Kibbeh Tray", "Quinoa Bowl", "Stuffed Vine Leaves", "Chicken Pasta", "Fattoush Bowl", "Lasagna", "Falafel Wrap", "Rice & Chicken"],
+  "cat-beverages": ["Mango Juice", "Pomegranate Juice", "Still Water", "Sparkling Water", "Iced Tea", "Cold Coffee", "Lemonade", "Apple Nectar", "Orange Soda", "Tonic Water", "Berry Smoothie", "Coconut Water"],
+  "cat-pantry": ["Chickpeas", "Red Lentils", "Tahini", "Penne Pasta", "Jasmine Rice", "Tomato Paste", "Corn Flakes", "Strawberry Jam", "Mixed Nuts", "Green Olives", "Tuna Chunks", "Granola"],
+  "cat-frozen": ["French Fries", "Garden Peas", "Chicken Tenders", "Cheese Pizza", "Spinach", "Fish Fingers", "Mixed Vegetables", "Beef Burgers", "Mango Cubes", "Mini Pastries", "Ice Cream", "Berry Mix"],
+  "cat-household": ["Laundry Liquid", "Kitchen Towels", "Aluminum Foil", "Surface Cleaner", "Food Storage Bags", "Toilet Tissue", "Hand Soap", "Sponges", "Fabric Softener", "Baking Paper", "Glass Cleaner", "Floor Cleaner"],
+};
+
+const generatedSizesByCategory: Record<string, string[]> = {
+  "cat-dairy": ["180g", "250g", "400g", "500g", "1L"],
+  "cat-produce": ["250g", "400g", "500g", "750g", "1kg"],
+  "cat-meat": ["250g", "400g", "500g", "750g", "1kg"],
+  "cat-bakery": ["2-pack", "4-pack", "5-pack", "6-pack", "500g"],
+  "cat-prepared": ["250g", "300g", "350g", "400g", "500g"],
+  "cat-beverages": ["250ml", "330ml", "500ml", "1L", "6-pack"],
+  "cat-pantry": ["250g", "400g", "500g", "750g", "1kg"],
+  "cat-frozen": ["300g", "400g", "500g", "750g", "1kg"],
+  "cat-household": ["500ml", "750ml", "1L", "3-pack", "6-pack"],
+};
+
+const generatedSupplierIdsByCategory: Record<string, string[]> = {
+  "cat-dairy": ["sup-cedar-dairy", "sup-union-foods"],
+  "cat-produce": ["sup-green-valley", "sup-union-foods"],
+  "cat-meat": ["sup-levant-meats", "sup-blue-harbor"],
+  "cat-bakery": ["sup-bakers-row", "sup-union-foods"],
+  "cat-prepared": ["sup-kitchen-co", "sup-union-foods"],
+  "cat-beverages": ["sup-bekaa-juices", "sup-union-foods"],
+  "cat-pantry": ["sup-union-foods"],
+  "cat-frozen": ["sup-cold-chain", "sup-union-foods"],
+  "cat-household": ["sup-homewise", "sup-union-foods"],
+};
+
+const generatedBaseCostByCategory: Record<string, number> = {
+  "cat-dairy": 1.75,
+  "cat-produce": 1.35,
+  "cat-meat": 4.8,
+  "cat-bakery": 1.25,
+  "cat-prepared": 3.4,
+  "cat-beverages": 1.1,
+  "cat-pantry": 1.3,
+  "cat-frozen": 3.25,
+  "cat-household": 1.9,
+};
+
+const generatedTrackedTargets: Record<string, { multiplier: number; offset: number; target: number }> = {
+  "br-downtown": { multiplier: 37, offset: 3, target: 65 },
+  "br-north": { multiplier: 43, offset: 17, target: 55 },
+  "br-airport": { multiplier: 47, offset: 29, target: 46 },
+  "br-hamra": { multiplier: 53, offset: 41, target: 61 },
+};
+
+const generatedAvailabilityTargets: Record<string, number> = {
+  "br-downtown": 82,
+  "br-north": 74,
+  "br-airport": 66,
+  "br-hamra": 79,
+};
+
+function createGeneratedProduct(generatedIndex: number): Product {
+  const productIndex = productSeeds.length + generatedIndex;
+  const categoryIndex = generatedIndex % categories.length;
+  const category = categories[categoryIndex];
+  const categorySequence = Math.floor(generatedIndex / categories.length);
+  const names = generatedNamesByCategory[category.id];
+  const sizes = generatedSizesByCategory[category.id];
+  const suppliersForCategory = generatedSupplierIdsByCategory[category.id];
+  const nemsTracked = generatedIndex < GENERATED_TRACKED_COUNT;
+  const trackedBranchIds = nemsTracked
+    ? branches
+        .filter((branch) => {
+          const config = generatedTrackedTargets[branch.id];
+          return (
+            (generatedIndex * config.multiplier + config.offset) %
+              GENERATED_TRACKED_COUNT <
+            config.target
+          );
+        })
+        .map((branch) => branch.id)
+    : [];
+
+  if (nemsTracked && trackedBranchIds.length === 0) {
+    trackedBranchIds.push(branches[generatedIndex % branches.length].id);
+  }
+
+  const availableBranchIds = branches
+    .filter((branch, branchIndex) => {
+      const availabilityScore =
+        (generatedIndex * 37 + branchIndex * 19 + Math.floor(generatedIndex / 7) * 11) %
+        100;
+      return availabilityScore < generatedAvailabilityTargets[branch.id];
+    })
+    .map((branch) => branch.id);
+
+  trackedBranchIds.forEach((branchId) => {
+    if (!availableBranchIds.includes(branchId)) {
+      availableBranchIds.push(branchId);
+    }
+  });
+
+  if (availableBranchIds.length === 0) {
+    availableBranchIds.push(branches[(generatedIndex + 1) % branches.length].id);
+  }
+
+  const baseVelocity = 2.2 + ((generatedIndex * 17 + categoryIndex * 13) % 150) / 10;
+  const size = sizes[Math.floor(categorySequence / names.length) % sizes.length];
+  const supplierId = suppliersForCategory[
+    (generatedIndex + categorySequence) % suppliersForCategory.length
+  ];
+
+  return {
+    id: `prd-${String(productIndex + 1).padStart(3, "0")}`,
+    sku: `NMS-${String(1001 + productIndex)}`,
+    barcode: createBarcode(productIndex + 1),
+    name: `${generatedBrands[(categorySequence * 3 + categoryIndex) % generatedBrands.length]} ${names[categorySequence % names.length]} ${size}`,
+    categoryId: category.id,
+    supplierId,
+    nemsTracked,
+    trackedBranchIds,
+    availableBranchIds,
+    demoTier: "background",
+    removeBeforeDays: nemsTracked
+      ? removeBeforeDaysByCategory[category.id] + (generatedIndex % 3)
+      : null,
+    unitCost: Number(
+      (generatedBaseCostByCategory[category.id] + ((generatedIndex * 7) % 28) / 10).toFixed(2)
+    ),
+    salesVelocity: Object.fromEntries(
+      branches.map((branch, branchIndex) => [
+        branch.id,
+        availableBranchIds.includes(branch.id)
+          ? Number(
+              (
+                baseVelocity *
+                branchVelocityFactors[branchIndex] *
+                (0.92 + ((generatedIndex + branchIndex * 3) % 9) * 0.02)
+              ).toFixed(1)
+            )
+          : 0,
+      ])
+    ),
+  };
+}
+
+const generatedProducts = Array.from(
+  { length: GENERATED_PRODUCT_COUNT },
+  (_, generatedIndex) => createGeneratedProduct(generatedIndex)
+);
+
+export const products: Product[] = [...primaryProducts, ...generatedProducts];
 
 const DAY_MS = 86_400_000;
 
@@ -260,7 +473,10 @@ function getTrackedProductsForBranch(branchId: string) {
 export const batches: Batch[] = branches.flatMap((branch, branchIndex) =>
   getTrackedProductsForBranch(branch.id).flatMap((product, productIndex) => {
     const offsets = attentionOffsetsByBranch[branch.id];
-    const offset = offsets[productIndex % offsets.length];
+    const offset =
+      product.demoTier === "primary"
+        ? offsets[productIndex % offsets.length]
+        : 18 + ((productIndex * 11 + branchIndex * 17) % 95);
     const removalDate = shiftDate(DEMO_TODAY, offset);
     const velocity = product.salesVelocity[branch.id];
     const initialUnits = Math.max(18, Math.round(velocity * (8 + (productIndex % 5))));
@@ -291,16 +507,33 @@ export const batches: Batch[] = branches.flatMap((branch, branchIndex) =>
     }
 
     const historicRemovalDate = shiftDate(DEMO_TODAY, -11 - (productIndex % 15));
+    const historyIndex = Math.floor(productIndex / 2);
     const removalDelay =
-      branch.id === "br-downtown"
-        ? productIndex % 5 === 0
-          ? 2
-          : -1
-        : branch.id === "br-north"
-          ? productIndex % 7 === 0
+      product.demoTier === "primary"
+        ? branch.id === "br-downtown"
+          ? productIndex % 5 === 0
+            ? 2
+            : -1
+          : branch.id === "br-north"
+            ? productIndex % 7 === 0
+              ? 1
+              : -1
+            : -1
+        : branch.id === "br-downtown"
+          ? historyIndex % 10 === 0
             ? 1
             : -1
-          : -1;
+          : branch.id === "br-north"
+            ? historyIndex % 8 === 0
+              ? 1
+              : -1
+            : branch.id === "br-airport"
+              ? historyIndex % 30 === 0
+                ? 1
+                : -1
+              : historyIndex % 25 === 0
+                ? 1
+                : -1;
     const historicBatch: Batch = {
       id: `bat-${branchIndex + 1}-${String(productIndex + 1).padStart(2, "0")}-h`,
       branchId: branch.id,
