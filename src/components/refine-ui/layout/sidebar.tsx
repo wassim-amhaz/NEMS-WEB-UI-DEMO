@@ -1,365 +1,139 @@
-"use client";
+import {
+  BarChart3,
+  Boxes,
+  ClipboardCheck,
+  LayoutDashboard,
+  ListTodo,
+  PackageSearch,
+  ShieldCheck,
+} from "lucide-react";
+import { Link, useLocation } from "react-router";
 
-import { Button } from "@/components/ui/button";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   Sidebar as ShadcnSidebar,
-  SidebarContent as ShadcnSidebarContent,
-  SidebarHeader as ShadcnSidebarHeader,
-  SidebarRail as ShadcnSidebarRail,
-  SidebarTrigger as ShadcnSidebarTrigger,
-  useSidebar as useShadcnSidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarRail,
+  useSidebar,
 } from "@/components/ui/sidebar";
-import { cn } from "@/lib/utils";
-import {
-  useLink,
-  useMenu,
-  useRefineOptions,
-  type TreeMenuItem,
-} from "@refinedev/core";
-import { ChevronRight, ListIcon } from "lucide-react";
-import React from "react";
+
+const navigation = [
+  {
+    items: [{ label: "Overview", to: "/overview", icon: LayoutDashboard }],
+  },
+  {
+    label: "Operations",
+    items: [
+      { label: "Action Center", to: "/actions", icon: ListTodo },
+      { label: "Batches", to: "/batches", icon: Boxes },
+    ],
+  },
+  {
+    label: "Intelligence",
+    items: [
+      { label: "Products", to: "/products", icon: PackageSearch },
+      { label: "Analytics", to: "/analytics", icon: BarChart3 },
+    ],
+  },
+  {
+    label: "Control",
+    items: [{ label: "Audits", to: "/audits", icon: ClipboardCheck }],
+  },
+];
 
 export function Sidebar() {
-  const { open } = useShadcnSidebar();
-  const { menuItems, selectedKey } = useMenu();
+  const { pathname } = useLocation();
+  const { isMobile, setOpenMobile } = useSidebar();
 
   return (
-    <ShadcnSidebar collapsible="icon" className={cn("border-none")}>
-      <ShadcnSidebarRail />
-      <SidebarHeader />
-      <ShadcnSidebarContent
-        className={cn(
-          "transition-discrete",
-          "duration-200",
-          "flex",
-          "flex-col",
-          "gap-2",
-          "pt-2",
-          "pb-2",
-          "border-r",
-          "border-border",
-          {
-            "px-3": open,
-            "px-1": !open,
-          }
-        )}
-      >
-        {menuItems.map((item: TreeMenuItem) => (
-          <SidebarItem
-            key={item.key || item.name}
-            item={item}
-            selectedKey={selectedKey}
-          />
-        ))}
-      </ShadcnSidebarContent>
-    </ShadcnSidebar>
-  );
-}
-
-type MenuItemProps = {
-  item: TreeMenuItem;
-  selectedKey?: string;
-};
-
-function SidebarItem({ item, selectedKey }: MenuItemProps) {
-  const { open } = useShadcnSidebar();
-
-  if (item.meta?.group) {
-    return <SidebarItemGroup item={item} selectedKey={selectedKey} />;
-  }
-
-  if (item.children && item.children.length > 0) {
-    if (open) {
-      return <SidebarItemCollapsible item={item} selectedKey={selectedKey} />;
-    }
-    return <SidebarItemDropdown item={item} selectedKey={selectedKey} />;
-  }
-
-  return <SidebarItemLink item={item} selectedKey={selectedKey} />;
-}
-
-function SidebarItemGroup({ item, selectedKey }: MenuItemProps) {
-  const { children } = item;
-  const { open } = useShadcnSidebar();
-
-  return (
-    <div className={cn("border-t", "border-sidebar-border", "pt-4")}>
-      <span
-        className={cn(
-          "ml-3",
-          "block",
-          "text-xs",
-          "font-semibold",
-          "uppercase",
-          "text-muted-foreground",
-          "transition-all",
-          "duration-200",
-          {
-            "h-8": open,
-            "h-0": !open,
-            "opacity-0": !open,
-            "opacity-100": open,
-            "pointer-events-none": !open,
-            "pointer-events-auto": open,
-          }
-        )}
-      >
-        {getDisplayName(item)}
-      </span>
-      {children && children.length > 0 && (
-        <div className={cn("flex", "flex-col")}>
-          {children.map((child: TreeMenuItem) => (
-            <SidebarItem
-              key={child.key || child.name}
-              item={child}
-              selectedKey={selectedKey}
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function SidebarItemCollapsible({ item, selectedKey }: MenuItemProps) {
-  const { name, children } = item;
-
-  const chevronIcon = (
-    <ChevronRight
-      className={cn(
-        "h-4",
-        "w-4",
-        "shrink-0",
-        "text-muted-foreground",
-        "transition-transform",
-        "duration-200",
-        "group-data-[state=open]:rotate-90"
-      )}
-    />
-  );
-
-  return (
-    <Collapsible key={`collapsible-${name}`} className={cn("w-full", "group")}>
-      <CollapsibleTrigger asChild>
-        <SidebarButton item={item} rightIcon={chevronIcon} />
-      </CollapsibleTrigger>
-      <CollapsibleContent className={cn("ml-6", "flex", "flex-col", "gap-2")}>
-        {children?.map((child: TreeMenuItem) => (
-          <SidebarItem
-            key={child.key || child.name}
-            item={child}
-            selectedKey={selectedKey}
-          />
-        ))}
-      </CollapsibleContent>
-    </Collapsible>
-  );
-}
-
-function SidebarItemDropdown({ item, selectedKey }: MenuItemProps) {
-  const { children } = item;
-  const Link = useLink();
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <SidebarButton item={item} />
-      </DropdownMenuTrigger>
-      <DropdownMenuContent side="right" align="start">
-        {children?.map((child: TreeMenuItem) => {
-          const { key: childKey } = child;
-          const isSelected = childKey === selectedKey;
-
-          return (
-            <DropdownMenuItem key={childKey || child.name} asChild>
-              <Link
-                to={child.route || ""}
-                className={cn("flex w-full items-center gap-2", {
-                  "bg-accent text-accent-foreground": isSelected,
-                })}
-              >
-                <ItemIcon
-                  icon={child.meta?.icon ?? child.icon}
-                  isSelected={isSelected}
-                />
-                <span>{getDisplayName(child)}</span>
-              </Link>
-            </DropdownMenuItem>
-          );
-        })}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
-
-function SidebarItemLink({ item, selectedKey }: MenuItemProps) {
-  const isSelected = item.key === selectedKey;
-
-  return <SidebarButton item={item} isSelected={isSelected} asLink={true} />;
-}
-
-function SidebarHeader() {
-  const { title } = useRefineOptions();
-  const { open, isMobile } = useShadcnSidebar();
-
-  return (
-    <ShadcnSidebarHeader
-      className={cn(
-        "p-0",
-        "h-16",
-        "border-b",
-        "border-border",
-        "flex-row",
-        "items-center",
-        "justify-between",
-        "overflow-hidden"
-      )}
+    <ShadcnSidebar
+      collapsible="icon"
+      className="border-r border-sidebar-border"
     >
-      <div
-        className={cn(
-          "whitespace-nowrap",
-          "flex",
-          "flex-row",
-          "h-full",
-          "items-center",
-          "justify-start",
-          "gap-2",
-          "transition-discrete",
-          "duration-200",
-          {
-            "pl-3": !open,
-            "pl-5": open,
-          }
-        )}
-      >
-        <div>{title.icon}</div>
-        <h2
-          className={cn(
-            "text-sm",
-            "font-bold",
-            "transition-opacity",
-            "duration-200",
-            {
-              "opacity-0": !open,
-              "opacity-100": open,
-            }
-          )}
+      <SidebarHeader className="h-[4.25rem] justify-center border-b border-sidebar-border px-3">
+        <Link
+          to="/overview"
+          className="flex min-w-0 items-center gap-3 rounded-lg px-1 outline-none ring-sidebar-ring focus-visible:ring-2"
+          onClick={() => isMobile && setOpenMobile(false)}
         >
-          {title.text}
-        </h2>
-      </div>
-
-      <ShadcnSidebarTrigger
-        className={cn("text-muted-foreground", "mr-1.5", {
-          "opacity-0": !open,
-          "opacity-100": open || isMobile,
-          "pointer-events-auto": open || isMobile,
-          "pointer-events-none": !open && !isMobile,
-        })}
-      />
-    </ShadcnSidebarHeader>
-  );
-}
-
-function getDisplayName(item: TreeMenuItem) {
-  return item.meta?.label ?? item.label ?? item.name;
-}
-
-type IconProps = {
-  icon: React.ReactNode;
-  isSelected?: boolean;
-};
-
-function ItemIcon({ icon, isSelected }: IconProps) {
-  return (
-    <div
-      className={cn("w-4", {
-        "text-muted-foreground": !isSelected,
-        "text-sidebar-primary-foreground": isSelected,
-      })}
-    >
-      {icon ?? <ListIcon />}
-    </div>
-  );
-}
-
-type SidebarButtonProps = React.ComponentProps<typeof Button> & {
-  item: TreeMenuItem;
-  isSelected?: boolean;
-  rightIcon?: React.ReactNode;
-  asLink?: boolean;
-  onClick?: () => void;
-};
-
-function SidebarButton({
-  item,
-  isSelected = false,
-  rightIcon,
-  asLink = false,
-  className,
-  onClick,
-  ...props
-}: SidebarButtonProps) {
-  const Link = useLink();
-
-  const buttonContent = (
-    <>
-      <ItemIcon icon={item.meta?.icon ?? item.icon} isSelected={isSelected} />
-      <span
-        className={cn("tracking-[-0.00875rem]", {
-          "flex-1": rightIcon,
-          "text-left": rightIcon,
-          "line-clamp-1": !rightIcon,
-          truncate: !rightIcon,
-          "font-normal": !isSelected,
-          "font-semibold": isSelected,
-          "text-sidebar-primary-foreground": isSelected,
-          "text-foreground": !isSelected,
-        })}
-      >
-        {getDisplayName(item)}
-      </span>
-      {rightIcon}
-    </>
-  );
-
-  return (
-    <Button
-      asChild={!!(asLink && item.route)}
-      variant="ghost"
-      size="lg"
-      className={cn(
-        "flex w-full items-center justify-start gap-2 py-2 !px-3 text-sm",
-        {
-          "bg-sidebar-primary": isSelected,
-          "hover:!bg-sidebar-primary/90": isSelected,
-          "text-sidebar-primary-foreground": isSelected,
-          "hover:text-sidebar-primary-foreground": isSelected,
-        },
-        className
-      )}
-      onClick={onClick}
-      {...props}
-    >
-      {asLink && item.route ? (
-        <Link to={item.route} className={cn("flex w-full items-center gap-2")}>
-          {buttonContent}
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground shadow-sm">
+            <ShieldCheck className="size-5" />
+          </span>
+          <span className="min-w-0 group-data-[collapsible=icon]:hidden">
+            <span className="block text-base font-semibold tracking-tight">
+              NEMS
+            </span>
+            <span className="block truncate text-[0.68rem] font-medium uppercase tracking-[0.14em] text-sidebar-foreground/55">
+              Operations intelligence
+            </span>
+          </span>
         </Link>
-      ) : (
-        buttonContent
-      )}
-    </Button>
+      </SidebarHeader>
+
+      <SidebarContent className="gap-0 px-2 py-4">
+        {navigation.map((group, groupIndex) => (
+          <SidebarGroup
+            key={group.label ?? "overview"}
+            className={groupIndex === 0 ? "pt-0" : "pt-3"}
+          >
+            {group.label ? (
+              <SidebarGroupLabel className="px-2 text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-sidebar-foreground/45">
+                {group.label}
+              </SidebarGroupLabel>
+            ) : null}
+            <SidebarGroupContent>
+              <SidebarMenu className="gap-1">
+                {group.items.map((item) => {
+                  const Icon = item.icon;
+                  const active = pathname === item.to;
+
+                  return (
+                    <SidebarMenuItem key={item.to}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={active}
+                        tooltip={item.label}
+                        className="h-10 rounded-lg px-3 text-sidebar-foreground/72 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-primary data-[active=true]:font-semibold data-[active=true]:text-sidebar-primary-foreground"
+                      >
+                        <Link
+                          to={item.to}
+                          onClick={() => isMobile && setOpenMobile(false)}
+                        >
+                          <Icon className="size-[1.05rem]" />
+                          <span>{item.label}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ))}
+      </SidebarContent>
+
+      <SidebarFooter className="border-t border-sidebar-border p-3">
+        <div className="flex items-center gap-2 rounded-lg bg-sidebar-accent/65 px-2.5 py-2.5 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
+          <span className="relative flex size-7 shrink-0 items-center justify-center rounded-md bg-sidebar/70">
+            <span className="size-2 rounded-full bg-emerald-400 ring-4 ring-emerald-400/10" />
+          </span>
+          <span className="min-w-0 group-data-[collapsible=icon]:hidden">
+            <span className="block text-xs font-medium">Demo workspace</span>
+            <span className="block text-[0.68rem] text-sidebar-foreground/50">
+              UI foundation ready
+            </span>
+          </span>
+        </div>
+      </SidebarFooter>
+      <SidebarRail />
+    </ShadcnSidebar>
   );
 }
 

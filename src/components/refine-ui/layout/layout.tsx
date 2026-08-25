@@ -1,41 +1,20 @@
-"use client";
-
-import { Header } from "@/components/refine-ui/layout/header";
-import { ThemeProvider } from "@/components/refine-ui/theme/theme-provider";
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { cn } from "@/lib/utils";
 import type { PropsWithChildren } from "react";
+
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { Header } from "./header";
 import { Sidebar } from "./sidebar";
 
 export function Layout({ children }: PropsWithChildren) {
   return (
-    <ThemeProvider>
-      <SidebarProvider>
-        <Sidebar />
-        <SidebarInset>
-          <Header />
-          <main
-            className={cn(
-              "@container/main",
-              "container",
-              "mx-auto",
-              "relative",
-              "w-full",
-              "flex",
-              "flex-col",
-              "flex-1",
-              "px-2",
-              "pt-4",
-              "md:p-4",
-              "lg:px-6",
-              "lg:pt-6"
-            )}
-          >
-            {children}
-          </main>
-        </SidebarInset>
-      </SidebarProvider>
-    </ThemeProvider>
+    <SidebarProvider>
+      <Sidebar />
+      <SidebarInset className="min-w-0 bg-background">
+        <Header />
+        <main className="flex flex-1 flex-col px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+          {children}
+        </main>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }
 
