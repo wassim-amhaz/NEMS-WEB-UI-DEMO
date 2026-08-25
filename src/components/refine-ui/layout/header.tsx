@@ -8,6 +8,7 @@ import {
   Settings,
 } from "lucide-react";
 
+import { useBranch } from "@/components/nems/branch-context";
 import { ThemeToggle } from "@/components/refine-ui/theme/theme-toggle";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -28,26 +29,32 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { branches } from "@/mock/nems-data";
 
-export const Header = () => (
-  <header className="sticky top-0 z-40 flex h-[4.25rem] shrink-0 items-center gap-2 border-b border-border/80 bg-card/95 px-3 backdrop-blur sm:gap-3 sm:px-5">
-    <SidebarTrigger className="size-9 shrink-0 text-muted-foreground" />
+export const Header = () => {
+  const { selectedBranchId, setSelectedBranchId } = useBranch();
 
-    <Select defaultValue="downtown">
-      <SelectTrigger
-        aria-label="Select branch"
-        className="h-9 w-[9.25rem] border-border/80 bg-background shadow-none sm:w-[11rem]"
-      >
-        <SelectValue placeholder="Select branch" />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="downtown">Downtown Branch</SelectItem>
-        <SelectItem value="north">North Branch</SelectItem>
-        <SelectItem value="airport">Airport Branch</SelectItem>
-      </SelectContent>
-    </Select>
+  return (
+    <header className="sticky top-0 z-40 flex h-[4.25rem] shrink-0 items-center gap-2 border-b border-border/80 bg-card/95 px-3 backdrop-blur sm:gap-3 sm:px-5">
+      <SidebarTrigger className="size-9 shrink-0 text-muted-foreground" />
 
-    <div className="relative hidden max-w-xl flex-1 md:block">
+      <Select value={selectedBranchId} onValueChange={setSelectedBranchId}>
+        <SelectTrigger
+          aria-label="Select branch"
+          className="h-9 w-[9.25rem] border-border/80 bg-background shadow-none sm:w-[11rem]"
+        >
+          <SelectValue placeholder="Select branch" />
+        </SelectTrigger>
+        <SelectContent>
+          {branches.map((branch) => (
+            <SelectItem key={branch.id} value={branch.id}>
+              {branch.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <div className="relative hidden max-w-xl flex-1 md:block">
       <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
       <Input
         aria-label="Global search"
@@ -57,9 +64,9 @@ export const Header = () => (
       <kbd className="pointer-events-none absolute right-2.5 top-1/2 hidden -translate-y-1/2 rounded border bg-muted px-1.5 py-0.5 font-sans text-[0.65rem] text-muted-foreground lg:inline-flex">
         Ctrl K
       </kbd>
-    </div>
+      </div>
 
-    <div className="ml-auto flex items-center gap-1 sm:gap-1.5">
+      <div className="ml-auto flex items-center gap-1 sm:gap-1.5">
       <Button
         variant="outline"
         className="hidden h-9 gap-2 border-border/80 bg-background px-3 font-normal shadow-none lg:flex"
@@ -135,8 +142,9 @@ export const Header = () => (
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-    </div>
-  </header>
-);
+      </div>
+    </header>
+  );
+};
 
 Header.displayName = "Header";
