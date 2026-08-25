@@ -8,22 +8,31 @@ import {
 
 import { branches, type Branch } from "@/mock/nems-data";
 
+export const ALL_BRANCHES_ID = "all";
+
 type BranchContextValue = {
   selectedBranch: Branch;
   selectedBranchId: string;
+  isAllBranches: boolean;
   setSelectedBranchId: (branchId: string) => void;
 };
 
 const BranchContext = createContext<BranchContextValue | null>(null);
 
 export function BranchProvider({ children }: PropsWithChildren) {
-  const [selectedBranchId, setSelectedBranchId] = useState(branches[0].id);
+  const [selectedBranchId, setSelectedBranchId] = useState(ALL_BRANCHES_ID);
+  const isAllBranches = selectedBranchId === ALL_BRANCHES_ID;
   const selectedBranch =
     branches.find((branch) => branch.id === selectedBranchId) ?? branches[0];
 
   const value = useMemo(
-    () => ({ selectedBranch, selectedBranchId, setSelectedBranchId }),
-    [selectedBranch, selectedBranchId]
+    () => ({
+      selectedBranch,
+      selectedBranchId,
+      isAllBranches,
+      setSelectedBranchId,
+    }),
+    [isAllBranches, selectedBranch, selectedBranchId]
   );
 
   return (

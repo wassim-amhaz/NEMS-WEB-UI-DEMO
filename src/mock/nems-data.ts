@@ -78,7 +78,7 @@ export const branches: Branch[] = [
   {
     id: "br-downtown",
     code: "BEY-01",
-    name: "Downtown Branch",
+    name: "Central Hub Beirut",
     city: "Beirut",
     region: "Central Beirut",
     manager: "Rana Mansour",
@@ -86,7 +86,7 @@ export const branches: Branch[] = [
   {
     id: "br-north",
     code: "DBY-02",
-    name: "North Branch",
+    name: "Rmeil",
     city: "Dbayeh",
     region: "Mount Lebanon",
     manager: "Karim Haddad",
@@ -94,7 +94,7 @@ export const branches: Branch[] = [
   {
     id: "br-airport",
     code: "BEY-03",
-    name: "Airport Branch",
+    name: "Mar Mkhail",
     city: "Choueifat",
     region: "South Beirut",
     manager: "Maya Khoury",
@@ -102,7 +102,7 @@ export const branches: Branch[] = [
   {
     id: "br-hamra",
     code: "BEY-04",
-    name: "Hamra Branch",
+    name: "Souifi",
     city: "Beirut",
     region: "West Beirut",
     manager: "Omar Nasser",
