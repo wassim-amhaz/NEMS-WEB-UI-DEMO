@@ -502,16 +502,40 @@ export const batches: Batch[] = branches.flatMap((branch, branchIndex) =>
       productId: product.id,
       lotNumber: `L${260700 + branchIndex * 100 + productIndex}`,
       receivedDate: shiftDate(removalDate, -11 - (productIndex % 7)),
-      expiryDate: shiftDate(removalDate, 3 + (productIndex % 3)),
+      expiryDate: shiftDate(removalDate, product.removeBeforeDays ?? 0),
       removalDate,
       initialUnits,
       unitsOnHand,
       unitCost: product.unitCost,
       status: "active",
     };
+    const activeBatches: Batch[] = [activeBatch];
+
+    if (product.demoTier === "primary" && productIndex % 4 === 0) {
+      const nextRemovalDate = shiftDate(
+        removalDate,
+        18 + (productIndex % 5)
+      );
+      activeBatches.push({
+        id: `bat-${branchIndex + 1}-${String(productIndex + 1).padStart(2, "0")}-b`,
+        branchId: branch.id,
+        productId: product.id,
+        lotNumber: `L${260900 + branchIndex * 100 + productIndex}`,
+        receivedDate: shiftDate(DEMO_TODAY, -2 - (productIndex % 4)),
+        expiryDate: shiftDate(
+          nextRemovalDate,
+          product.removeBeforeDays ?? 0
+        ),
+        removalDate: nextRemovalDate,
+        initialUnits: Math.max(16, Math.round(velocity * 8)),
+        unitsOnHand: Math.max(6, Math.round(velocity * 2.5)),
+        unitCost: product.unitCost,
+        status: "active",
+      });
+    }
 
     if (productIndex % 2 !== 0) {
-      return [activeBatch];
+      return activeBatches;
     }
 
     const historicRemovalDate = shiftDate(DEMO_TODAY, -11 - (productIndex % 15));
@@ -548,7 +572,10 @@ export const batches: Batch[] = branches.flatMap((branch, branchIndex) =>
       productId: product.id,
       lotNumber: `L${260500 + branchIndex * 100 + productIndex}`,
       receivedDate: shiftDate(historicRemovalDate, -14),
-      expiryDate: shiftDate(historicRemovalDate, 3),
+      expiryDate: shiftDate(
+        historicRemovalDate,
+        product.removeBeforeDays ?? 0
+      ),
       removalDate: historicRemovalDate,
       removedAt: shiftDate(historicRemovalDate, removalDelay),
       initialUnits: Math.round(initialUnits * 0.9),
@@ -557,7 +584,7 @@ export const batches: Batch[] = branches.flatMap((branch, branchIndex) =>
       status: "removed",
     };
 
-    return [activeBatch, historicBatch];
+    return [...activeBatches, historicBatch];
   })
 );
 
