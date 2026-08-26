@@ -470,6 +470,12 @@ function getTrackedProductsForBranch(branchId: string) {
   return products.filter((product) => product.trackedBranchIds.includes(branchId));
 }
 
+const fifoVerificationRemainingUnits: Record<string, number> = {
+  "br-downtown:prd-002": 3,
+  "br-downtown:prd-007": 4,
+  "br-north:prd-002": 3,
+};
+
 export const batches: Batch[] = branches.flatMap((branch, branchIndex) =>
   getTrackedProductsForBranch(branch.id).flatMap((product, productIndex) => {
     const offsets = attentionOffsetsByBranch[branch.id];
@@ -480,14 +486,16 @@ export const batches: Batch[] = branches.flatMap((branch, branchIndex) =>
     const removalDate = shiftDate(DEMO_TODAY, offset);
     const velocity = product.salesVelocity[branch.id];
     const initialUnits = Math.max(18, Math.round(velocity * (8 + (productIndex % 5))));
-    const unitsOnHand = Math.max(
-      4,
-      Math.round(
-        velocity *
-          (2.2 + (productIndex % 4) * 0.65) *
-          exposureStockFactors[branch.id]
-      )
-    );
+    const unitsOnHand =
+      fifoVerificationRemainingUnits[`${branch.id}:${product.id}`] ??
+      Math.max(
+        4,
+        Math.round(
+          velocity *
+            (2.2 + (productIndex % 4) * 0.65) *
+            exposureStockFactors[branch.id]
+        )
+      );
     const activeBatch: Batch = {
       id: `bat-${branchIndex + 1}-${String(productIndex + 1).padStart(2, "0")}-a`,
       branchId: branch.id,
