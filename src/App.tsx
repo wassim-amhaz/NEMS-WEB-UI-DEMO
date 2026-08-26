@@ -3,12 +3,7 @@ import routerProvider, {
   DocumentTitleHandler,
   UnsavedChangesNotifier,
 } from "@refinedev/react-router";
-import {
-  BarChart3,
-  Boxes,
-  ClipboardCheck,
-  ListTodo,
-} from "lucide-react";
+import { BarChart3, Boxes, ClipboardCheck, ListTodo } from "lucide-react";
 import { BrowserRouter, Navigate, Outlet, Route, Routes } from "react-router";
 
 import "./App.css";
@@ -17,7 +12,7 @@ import { Toaster } from "./components/refine-ui/notification/toaster";
 import { ThemeProvider } from "./components/refine-ui/theme/theme-provider";
 import { OverviewPage } from "./pages/overview";
 import { PlaceholderPage } from "./pages/placeholder-page";
-import { ProductIntelligencePlaceholder } from "./pages/products/detail";
+import { ProductIntelligencePage } from "./pages/products/detail";
 import { MasterProductsPage } from "./pages/products";
 
 const resources = [
@@ -50,10 +45,7 @@ function App() {
               }
             >
               <Route index element={<Navigate to="/overview" replace />} />
-              <Route
-                path="/overview"
-                element={<OverviewPage />}
-              />
+              <Route path="/overview" element={<OverviewPage />} />
               <Route
                 path="/actions"
                 element={
@@ -78,10 +70,7 @@ function App() {
               />
               <Route path="/products">
                 <Route index element={<MasterProductsPage />} />
-                <Route
-                  path=":id"
-                  element={<ProductIntelligencePlaceholder />}
-                />
+                <Route path=":id" element={<ProductIntelligencePage />} />
               </Route>
               <Route
                 path="/analytics"
