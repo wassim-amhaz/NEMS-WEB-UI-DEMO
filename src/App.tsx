@@ -3,7 +3,7 @@ import routerProvider, {
   DocumentTitleHandler,
   UnsavedChangesNotifier,
 } from "@refinedev/react-router";
-import { BarChart3, Boxes, ClipboardCheck } from "lucide-react";
+import { BarChart3 } from "lucide-react";
 import { BrowserRouter, Navigate, Outlet, Route, Routes } from "react-router";
 
 import "./App.css";
@@ -12,6 +12,8 @@ import { Toaster } from "./components/refine-ui/notification/toaster";
 import { ThemeProvider } from "./components/refine-ui/theme/theme-provider";
 import { OverviewPage } from "./pages/overview";
 import { ActionCenterPage } from "./pages/actions";
+import { BatchesPage } from "./pages/batches";
+import { AuditsPage } from "./pages/audits";
 import { PlaceholderPage } from "./pages/placeholder-page";
 import { ProductIntelligencePage } from "./pages/products/detail";
 import { MasterProductsPage } from "./pages/products";
@@ -48,17 +50,7 @@ function App() {
               <Route index element={<Navigate to="/overview" replace />} />
               <Route path="/overview" element={<OverviewPage />} />
               <Route path="/actions" element={<ActionCenterPage />} />
-              <Route
-                path="/batches"
-                element={
-                  <PlaceholderPage
-                    icon={Boxes}
-                    eyebrow="Operations"
-                    title="Batches"
-                    description="The future home for batch-level stock visibility, expiry status, and FIFO execution."
-                  />
-                }
-              />
+              <Route path="/batches" element={<BatchesPage />} />
               <Route path="/products">
                 <Route index element={<MasterProductsPage />} />
                 <Route path=":id" element={<ProductIntelligencePage />} />
@@ -74,17 +66,7 @@ function App() {
                   />
                 }
               />
-              <Route
-                path="/audits"
-                element={
-                  <PlaceholderPage
-                    icon={ClipboardCheck}
-                    eyebrow="Control"
-                    title="Audits"
-                    description="A control workspace for review history, accountability, and operational traceability."
-                  />
-                }
-              />
+              <Route path="/audits" element={<AuditsPage />} />
               <Route path="*" element={<Navigate to="/overview" replace />} />
             </Route>
           </Routes>
