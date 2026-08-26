@@ -341,10 +341,15 @@ export function getProductIntelligence(
     units: event.units,
     value: event.value,
     description:
-      "A newer batch was depleted while older eligible stock remained.",
+      "A physical audit confirmed that shelf or storage stock was not rotated in the expected FIFO sequence.",
   }));
   const suspectedSignals: FifoSignal[] = batchRows
-    .filter((row) => row.status === "overdue")
+    .filter(
+      (row) =>
+        row.batch.status === "active" &&
+        row.batch.unitsOnHand <= 5 &&
+        fifoEvents.some((event) => event.branchId === row.batch.branchId)
+    )
     .slice(0, isAllBranches ? 3 : 1)
     .map((row) => ({
       id: `${row.batch.id}-suspected-fifo`,
@@ -354,7 +359,7 @@ export function getProductIntelligence(
       units: null,
       value: null,
       description:
-        "Removal is overdue; verify shelf sequence before the next stock decrement.",
+        "The expected FIFO batch is at its final units and this product has confirmed physical FIFO history. Verify the remaining shelf or storage units before depletion.",
     }));
   const fifoSignals = [...suspectedSignals, ...confirmedSignals].sort((a, b) =>
     b.occurredAt.localeCompare(a.occurredAt)

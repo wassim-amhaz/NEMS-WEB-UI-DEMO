@@ -3,7 +3,7 @@ import routerProvider, {
   DocumentTitleHandler,
   UnsavedChangesNotifier,
 } from "@refinedev/react-router";
-import { BarChart3, Boxes, ClipboardCheck, ListTodo } from "lucide-react";
+import { BarChart3, Boxes, ClipboardCheck } from "lucide-react";
 import { BrowserRouter, Navigate, Outlet, Route, Routes } from "react-router";
 
 import "./App.css";
@@ -11,6 +11,7 @@ import { Layout } from "./components/refine-ui/layout/layout";
 import { Toaster } from "./components/refine-ui/notification/toaster";
 import { ThemeProvider } from "./components/refine-ui/theme/theme-provider";
 import { OverviewPage } from "./pages/overview";
+import { ActionCenterPage } from "./pages/actions";
 import { PlaceholderPage } from "./pages/placeholder-page";
 import { ProductIntelligencePage } from "./pages/products/detail";
 import { MasterProductsPage } from "./pages/products";
@@ -46,17 +47,7 @@ function App() {
             >
               <Route index element={<Navigate to="/overview" replace />} />
               <Route path="/overview" element={<OverviewPage />} />
-              <Route
-                path="/actions"
-                element={
-                  <PlaceholderPage
-                    icon={ListTodo}
-                    eyebrow="Operations"
-                    title="Action Center"
-                    description="A focused workspace for the exceptions and follow-ups that need operational attention."
-                  />
-                }
-              />
+              <Route path="/actions" element={<ActionCenterPage />} />
               <Route
                 path="/batches"
                 element={
