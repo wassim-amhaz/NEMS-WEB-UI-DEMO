@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router";
 
+import { useActionResolutions } from "@/components/nems/action-resolution-context";
 import { ALL_BRANCHES_ID, useBranch } from "@/components/nems/branch-context";
 import { SectionHeader } from "@/components/nems/dashboard-ui";
 import { Badge } from "@/components/ui/badge";
@@ -75,6 +76,7 @@ import {
   type AuditEventStatus,
   type AuditEventType,
 } from "@/mock/audit-history";
+import { actionCenterItems } from "@/mock/action-center";
 import { DEMO_TODAY, branches } from "@/mock/nems-data";
 
 type EventOverrides = Record<string, AuditEventStatus>;
@@ -84,6 +86,7 @@ const DAY_MS = 86_400_000;
 
 export function AuditsPage() {
   const { selectedBranchId, setSelectedBranchId, isAllBranches } = useBranch();
+  const { resolvedActions } = useActionResolutions();
   const [branchFilter, setBranchFilter] = useState(selectedBranchId);
   const [search, setSearch] = useState("");
   const [eventTypeFilter, setEventTypeFilter] = useState("all");
@@ -103,15 +106,51 @@ export function AuditsPage() {
     setBranchFilter(selectedBranchId);
   }, [selectedBranchId]);
 
+  const sessionResolutionEvents = useMemo<AuditEvent[]>(
+    () =>
+      Object.values(resolvedActions).flatMap((resolution) => {
+        const action = actionCenterItems.find(
+          (item) => item.id === resolution.actionId
+        );
+        if (!action) return [];
+        return [
+          {
+            id: `AUD-SESSION-${action.id}`,
+            timestamp: resolution.completedAt,
+            type: "action-completed",
+            status: "completed",
+            actor: action.assignedTo,
+            actorRole: "Branch operator",
+            actorKind: "operator",
+            branch: action.branch,
+            entityType: "Action",
+            product: action.product,
+            batch: action.batch,
+            action,
+            description: `${action.typeLabel} completed for ${action.product.name}.`,
+            previousValue: "Open",
+            newValue: "Completed",
+            quantity: action.quantity ?? undefined,
+            outcome: resolution.outcome,
+            reason: action.reason,
+            note: resolution.note ?? "Completed during the current operating session.",
+            canCorrect: false,
+            canReverse: false,
+          } satisfies AuditEvent,
+        ];
+      }),
+    [resolvedActions]
+  );
+
   const allEvents = useMemo(
     () =>
-      [...localEvents, ...auditEvents]
+      [...localEvents, ...sessionResolutionEvents, ...auditEvents]
         .map((event) => ({
           ...event,
           status: eventOverrides[event.id] ?? event.status,
         }))
         .sort((a, b) => b.timestamp.localeCompare(a.timestamp)),
-    [eventOverrides, localEvents]
+    [eventOverrides, localEvents, sessionResolutionEvents]
   );
 
   const branchEvents = useMemo(
@@ -266,7 +305,7 @@ export function AuditsPage() {
           ? Number(changeValue)
           : undefined,
       reason: changeReason.trim(),
-      note: changeNote.trim() || "Manual management change recorded locally.",
+      note: changeNote.trim() || "Manual management change recorded.",
       sourceEventId: selectedEvent.id,
       canCorrect: false,
       canReverse: false,
@@ -302,7 +341,7 @@ export function AuditsPage() {
             className="w-fit gap-2 rounded-md px-3 py-1.5 text-xs"
           >
             <FileClock className="size-3.5 text-primary" />
-            Append-only demo history
+            Append-only system history
           </Badge>
         </div>
       </div>

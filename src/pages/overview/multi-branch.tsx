@@ -64,8 +64,8 @@ const compactCurrency = new Intl.NumberFormat("en-US", {
 const number = new Intl.NumberFormat("en-US");
 
 const lossChartConfig = {
-  fifo: { label: "FIFO loss", color: "var(--chart-1)" },
-  expiry: { label: "Expiry loss", color: "var(--chart-5)" },
+  fifo: { label: "FIFO Loss", color: "var(--chart-1)" },
+  expiry: { label: "Expiry Loss", color: "var(--chart-5)" },
 } satisfies ChartConfig;
 
 const complianceChartConfig = {
@@ -304,7 +304,7 @@ function BranchPerformanceTable({ items }: { items: BranchPerformance[] }) {
                 <TableHead className="pl-5">Branch</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">FIFO rate</TableHead>
-                <TableHead className="text-right">Expiry loss</TableHead>
+                <TableHead className="text-right">Expiry Loss</TableHead>
                 <TableHead className="text-right">Avoidable</TableHead>
                 <TableHead className="text-right">Removal</TableHead>
                 <TableHead className="text-right">Actions</TableHead>

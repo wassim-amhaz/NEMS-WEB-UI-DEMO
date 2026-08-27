@@ -21,7 +21,7 @@ import {
   Warehouse,
   type LucideIcon,
 } from "lucide-react";
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
 
 import { ALL_BRANCHES_ID, useBranch } from "@/components/nems/branch-context";
 import { SectionHeader } from "@/components/nems/dashboard-ui";
@@ -84,7 +84,8 @@ function formatDate(value: string | undefined) {
 }
 
 export function BatchesPage() {
-  const { selectedBranchId } = useBranch();
+  const { search: locationSearch } = useLocation();
+  const { selectedBranchId, setSelectedBranchId } = useBranch();
   const [branchFilter, setBranchFilter] = useState(selectedBranchId);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("active");
@@ -104,6 +105,18 @@ export function BatchesPage() {
     () => getBatchIntelligence(branchFilter),
     [branchFilter]
   );
+  const requestedBatchId = useMemo(
+    () => new URLSearchParams(locationSearch).get("batch"),
+    [locationSearch]
+  );
+
+  useEffect(() => {
+    if (!requestedBatchId) return;
+    const requestedBatch = rows.find(
+      (row) => row.batch.id === requestedBatchId
+    );
+    if (requestedBatch) setSelectedBatch(requestedBatch);
+  }, [requestedBatchId, rows]);
   const activeRows = rows.filter((row) => row.batch.status === "active");
   const overdueCount = activeRows.filter(
     (row) => row.removalWindow === "overdue"
@@ -243,7 +256,10 @@ export function BatchesPage() {
           </TabsList>
           <FilterSelect
             value={branchFilter}
-            onValueChange={setBranchFilter}
+            onValueChange={(value) => {
+              setBranchFilter(value);
+              setSelectedBranchId(value);
+            }}
             placeholder="Branch"
             className="w-full sm:w-52"
             items={[
@@ -337,7 +353,7 @@ export function BatchesPage() {
                     placeholder="FIFO position"
                     items={[
                       { value: "all", label: "All FIFO positions" },
-                      { value: "consume-first", label: "Consume first" },
+                      { value: "consume-first", label: "Consume First" },
                       { value: "next", label: "Next" },
                       { value: "later", label: "Later" },
                       { value: "closed", label: "Closed" },

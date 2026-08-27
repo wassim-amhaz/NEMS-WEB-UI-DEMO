@@ -75,7 +75,7 @@ const number = new Intl.NumberFormat("en-US");
 
 export function MasterProductsPage() {
   const navigate = useNavigate();
-  const { selectedBranchId } = useBranch();
+  const { selectedBranchId, setSelectedBranchId } = useBranch();
   const [search, setSearch] = useState("");
   const [trackingFilter, setTrackingFilter] =
     useState<TrackingFilter>("all");
@@ -104,7 +104,10 @@ export function MasterProductsPage() {
   );
 
   const isTracked = (product: Product) =>
-    trackingOverrides[product.id] ?? product.nemsTracked;
+    trackingOverrides[product.id] ??
+    (branchFilter === ALL_BRANCHES_ID
+      ? product.nemsTracked
+      : product.nemsTracked && product.trackedBranchIds.includes(branchFilter));
   const getRemoveBeforeDays = (product: Product) =>
     removeBeforeOverrides[product.id] ?? product.removeBeforeDays;
   const getEffectiveRisk = (row: ProductCatalogRow): ProductRisk =>
@@ -236,7 +239,7 @@ export function MasterProductsPage() {
         <CatalogStat
           label="High-Risk Tracked"
           value={highRiskCount}
-          detail={`Based on ${scopeLabel.toLowerCase()} exposure`}
+          detail={`Based on ${scopeLabel} exposure`}
           icon={AlertTriangle}
           tone="warning"
         />
@@ -318,7 +321,10 @@ export function MasterProductsPage() {
             />
             <FilterSelect
               value={branchFilter}
-              onValueChange={setBranchFilter}
+              onValueChange={(value) => {
+                setBranchFilter(value);
+                setSelectedBranchId(value);
+              }}
               placeholder="Branch"
               items={[
                 { value: ALL_BRANCHES_ID, label: "All Branches" },

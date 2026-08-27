@@ -120,24 +120,36 @@ function getTimeline(
   relatedLossEvents: LossEvent[]
 ) {
   const quantityDepleted = Math.max(0, batch.initialUnits - batch.unitsOnHand);
+  const batchLossEvents = relatedLossEvents.filter((event) => {
+    if (event.occurredAt < batch.receivedDate) return false;
+    if (event.type === "expiry" && event.occurredAt < batch.expiryDate)
+      return false;
+    return true;
+  });
   const items: BatchTimelineItem[] = [
     {
       id: `${batch.id}-received`,
       occurredAt: batch.receivedDate,
       type: "received",
       title: "Batch received",
-      description: `${batch.initialUnits} units entered tracked inventory from ${supplier.name}.`,
+      description: `${batch.initialUnits} units entered tracked inventory from ${supplier.name.replace(
+        /\.$/,
+        ""
+      )}.`,
     },
     {
       id: `${batch.id}-information`,
-      occurredAt: shiftDate(batch.receivedDate, 1),
+      occurredAt:
+        shiftDate(batch.receivedDate, 1) > DEMO_TODAY
+          ? DEMO_TODAY
+          : shiftDate(batch.receivedDate, 1),
       type: "information",
       title: "Batch information entered",
       description: `Expiry ${batch.expiryDate}; calculated removal ${batch.removalDate}.`,
     },
   ];
 
-  if (batch.status === "active") {
+  if (batch.status === "active" && batch.receivedDate <= DEMO_TODAY) {
     items.push({
       id: `${batch.id}-snapshot`,
       occurredAt: DEMO_TODAY,
@@ -148,7 +160,10 @@ function getTimeline(
     if (quantityDepleted > 0) {
       items.push({
         id: `${batch.id}-decrement`,
-        occurredAt: shiftDate(DEMO_TODAY, -3),
+        occurredAt:
+          shiftDate(DEMO_TODAY, -3) < batch.receivedDate
+            ? batch.receivedDate
+            : shiftDate(DEMO_TODAY, -3),
         type: "decrement",
         title: "System quantity movement",
         description: `${quantityDepleted} units have been depleted through normal FIFO allocation since receipt.`,
@@ -170,9 +185,11 @@ function getTimeline(
   }
 
   relatedActions.forEach((action) => {
+    const actionDate = action.completedAt ?? action.createdAt;
     items.push({
       id: `${batch.id}-${action.id}`,
-      occurredAt: action.completedAt ?? action.createdAt,
+      occurredAt:
+        actionDate < batch.receivedDate ? batch.receivedDate : actionDate,
       type:
         action.type === "fifo-verification"
           ? "fifo"
@@ -189,7 +206,7 @@ function getTimeline(
     });
   });
 
-  relatedLossEvents.slice(0, 5).forEach((event) => {
+  batchLossEvents.slice(0, 5).forEach((event) => {
     items.push({
       id: `${batch.id}-${event.id}`,
       occurredAt: event.occurredAt,

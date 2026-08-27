@@ -256,7 +256,7 @@ function getEvidence(
           label: "Expected removal",
           value: `${batch?.unitsOnHand ?? 0} units`,
         },
-        { label: "Removal date", value: batch?.removalDate ?? "Not recorded" },
+        { label: "Removal Date", value: batch?.removalDate ?? "Not recorded" },
         { label: "Expiry date", value: batch?.expiryDate ?? "Not recorded" },
       ];
     case "missing-batch-information":
@@ -309,7 +309,7 @@ function getEvidence(
           value: String(fifoViolations),
         },
         { label: "Current FIFO risk", value: fifoRisk },
-        { label: "Removal date", value: batch?.removalDate ?? "Not recorded" },
+        { label: "Removal Date", value: batch?.removalDate ?? "Not recorded" },
       ];
     case "urgent-operational-check":
       return [
@@ -319,7 +319,7 @@ function getEvidence(
           label: "Units exposed",
           value: `${batch?.unitsOnHand ?? expectedStock} units`,
         },
-        { label: "Removal date", value: batch?.removalDate ?? "Not recorded" },
+        { label: "Removal Date", value: batch?.removalDate ?? "Not recorded" },
       ];
   }
 }
@@ -349,7 +349,12 @@ function buildAction(action: OperationalAction): ActionCenterItem | null {
   const fifoRisk: ActionCenterItem["fifoRisk"] =
     fifoViolations >= 3 ? "High" : fifoViolations > 0 ? "Moderate" : "Low";
   const dueHour = 9 + (sequence % 7);
-  const createdDate = shiftDate(action.dueDate, -2 - (sequence % 4));
+  const plannedCreatedDate = shiftDate(
+    action.dueDate,
+    -2 - (sequence % 4)
+  );
+  const createdDate =
+    plannedCreatedDate > DEMO_TODAY ? DEMO_TODAY : plannedCreatedDate;
 
   return {
     id: action.id,

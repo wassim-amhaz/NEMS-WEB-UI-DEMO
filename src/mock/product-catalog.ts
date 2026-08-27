@@ -10,8 +10,12 @@ import {
   type Product,
   type Supplier,
 } from "./nems-data";
+import {
+  getVelocityBand,
+  type VelocityBand,
+} from "./operational-helpers";
 
-export type VelocityBand = "high" | "medium" | "low";
+export type { VelocityBand } from "./operational-helpers";
 export type ProductRisk = "high" | "medium" | "low" | "untracked";
 
 export type ProductCatalogRow = {
@@ -140,12 +144,7 @@ export function getProductCatalogRows(
       supplier,
       currentStock,
       averageDailyVelocity: Number(averageDailyVelocity.toFixed(1)),
-      velocityBand:
-        averageDailyVelocity >= 12
-          ? "high"
-          : averageDailyVelocity >= 6
-            ? "medium"
-            : "low",
+      velocityBand: getVelocityBand(averageDailyVelocity),
       activeBatches: product.nemsTracked ? productBatches.length : 0,
       expiryExposure: Number(expiryExposure.toFixed(2)),
       fifoLoss: Number(fifoLoss.toFixed(2)),

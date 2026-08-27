@@ -13,6 +13,7 @@ import {
   type LossEventType,
   type Product,
 } from "./nems-data";
+import { getVelocityLabel } from "./operational-helpers";
 
 export type AttentionWindow = "overdue" | "today" | "next3" | "next7";
 
@@ -29,7 +30,7 @@ export type RankedLossProduct = {
   value: number;
   events: number;
   velocity: number;
-  velocityLabel: "Very high" | "High" | "Moderate" | "Low";
+  velocityLabel: "High" | "Medium" | "Low";
   trendPercent: number;
   severity: "critical" | "high" | "medium";
 };
@@ -136,14 +137,7 @@ function rankLossProducts(
       ...item,
       value: Number(item.value.toFixed(2)),
       velocity,
-      velocityLabel:
-        velocity >= 12
-          ? "Very high"
-          : velocity >= 8
-            ? "High"
-            : velocity >= 5
-              ? "Moderate"
-              : "Low",
+      velocityLabel: getVelocityLabel(velocity),
       trendPercent: [-18, -9, 14, 7, -5][index],
       severity:
         item.value >= maxValue * 0.75 || item.events >= 4
@@ -361,7 +355,7 @@ export function getBranchDashboard(branchId: string): BranchDashboard {
       },
       {
         key: "early-removal",
-        label: "Early removal",
+        label: "Early-Removal Loss",
         value: Number(sum(earlyRemovalEvents, "value").toFixed(2)),
         units: sum(earlyRemovalEvents, "units"),
       },

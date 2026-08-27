@@ -172,6 +172,10 @@ function getCompletedChange(action: ActionCenterItem) {
 
 const actionEvents: AuditEvent[] = actionCenterItems.flatMap(
   (action, index) => {
+    const createdBatch =
+      action.batch && action.batch.receivedDate <= action.createdAt.slice(0, 10)
+        ? action.batch
+        : undefined;
     const created: AuditEvent = {
       id: `AUD-ACT-${String(index + 1).padStart(4, "0")}`,
       timestamp: action.createdAt,
@@ -183,7 +187,7 @@ const actionEvents: AuditEvent[] = actionCenterItems.flatMap(
       branch: action.branch,
       entityType: "Action",
       product: action.product,
-      batch: action.batch,
+      batch: createdBatch,
       action,
       description: `${action.typeLabel} action created for ${action.product.name}.`,
       newValue: `${action.priority} priority · due ${action.dueAt.slice(
@@ -198,6 +202,11 @@ const actionEvents: AuditEvent[] = actionCenterItems.flatMap(
     };
 
     if (!action.completedAt) return [created];
+    const completedBatch =
+      action.batch &&
+      action.batch.receivedDate <= action.completedAt.slice(0, 10)
+        ? action.batch
+        : undefined;
     const change = getCompletedChange(action);
     const completedType = getCompletedType(action);
     const completed: AuditEvent = {
@@ -217,7 +226,7 @@ const actionEvents: AuditEvent[] = actionCenterItems.flatMap(
           ? "Batch"
           : "Action",
       product: action.product,
-      batch: action.batch,
+      batch: completedBatch,
       action,
       description: `${action.typeLabel} completed for ${action.product.name}.`,
       previousValue: change.previousValue,
@@ -275,7 +284,11 @@ const batchEvents: AuditEvent[] = batches
     };
     const information: AuditEvent = {
       id: `AUD-INF-${String(index + 1).padStart(4, "0")}`,
-      timestamp: `${shiftDate(batch.receivedDate, 1)}T09:${String(
+      timestamp: `${
+        shiftDate(batch.receivedDate, 1) > DEMO_TODAY
+          ? DEMO_TODAY
+          : shiftDate(batch.receivedDate, 1)
+      }T09:${String(
         (index * 11) % 60
       ).padStart(2, "0")}:00`,
       type: "batch-information-updated",
@@ -304,10 +317,15 @@ const batchEvents: AuditEvent[] = batches
 const lossAuditEvents: AuditEvent[] = lossEvents.map((event, index) => {
   const product = products.find((item) => item.id === event.productId)!;
   const branch = branches.find((item) => item.id === event.branchId)!;
-  const batch = batches.find(
-    (item) =>
-      item.productId === event.productId && item.branchId === event.branchId
-  );
+  const batch = batches
+    .filter(
+      (item) =>
+        item.productId === event.productId &&
+        item.branchId === event.branchId &&
+        item.receivedDate <= event.occurredAt &&
+        (event.type !== "expiry" || item.expiryDate <= event.occurredAt)
+    )
+    .sort((a, b) => b.receivedDate.localeCompare(a.receivedDate))[0];
   const isFifo = event.type === "fifo";
   return {
     id: `AUD-LOS-${String(index + 1).padStart(4, "0")}`,
@@ -336,7 +354,7 @@ const lossAuditEvents: AuditEvent[] = lossEvents.map((event, index) => {
     outcome: `${Math.round(
       event.preventablePercent * 100
     )}% estimated preventable.`,
-    note: "Historical loss records are view-only in this prototype.",
+    note: "Historical loss records are retained as read-only operational history.",
     canCorrect: false,
     canReverse: false,
   } satisfies AuditEvent;

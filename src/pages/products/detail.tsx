@@ -51,6 +51,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { getProductCatalogRows } from "@/mock/product-catalog";
+import { getVelocityLabel } from "@/mock/operational-helpers";
 import {
   getProductIntelligence,
   type ProductBatchStatus,
@@ -139,8 +140,8 @@ export function ProductIntelligencePage() {
             <DialogTitle>Track with NEMS</DialogTitle>
             <DialogDescription>
               Configure the removal lead time for {intelligence.product.name} in{" "}
-              {intelligence.contextLabel}. This demo change is local to the
-              current page.
+              {intelligence.contextLabel}. This tracking change applies to the
+              current session.
             </DialogDescription>
           </DialogHeader>
           <div className="rounded-lg border bg-muted/30 p-4">
@@ -257,7 +258,7 @@ function ProductHeader({
               : `Not tracked in ${intelligence.contextLabel}`}
           </Badge>
           <Badge variant="secondary" className="rounded-md px-2.5 py-1">
-            Remove before:{" "}
+            Remove Before:{" "}
             {demoTracked
               ? `${demoRemoveBeforeDays} days`
               : product.removeBeforeDays
@@ -288,7 +289,7 @@ function TrackedProductIntelligence({
         <IntelligenceMetric
           label="Sales Velocity"
           value={`${metrics.averageDailyVelocity.toFixed(1)}/day`}
-          detail={getVelocityLabel(metrics.averageDailyVelocity)}
+          detail={`${getVelocityLabel(metrics.averageDailyVelocity)} sales velocity`}
           icon={TrendingUp}
         />
         <IntelligenceMetric
@@ -304,7 +305,9 @@ function TrackedProductIntelligence({
         <IntelligenceMetric
           label="Expiry Exposure"
           value={currency.format(metrics.expiryExposure)}
-          detail={`${metrics.expiryUnits} units lost this period`}
+          detail={`${number.format(
+            metrics.expiryExposureUnits
+          )} units currently exposed`}
           icon={CalendarClock}
           tone={metrics.expiryExposure > 0 ? "warning" : "success"}
         />
@@ -338,7 +341,7 @@ function TrackedProductIntelligence({
               "history",
             ].map((tab) => (
               <TabsTrigger key={tab} value={tab} className="capitalize">
-                {tab}
+                {tab === "fifo" ? "FIFO" : tab}
               </TabsTrigger>
             ))}
           </TabsList>
@@ -379,14 +382,14 @@ function OverviewTab({ intelligence }: { intelligence: ProductIntelligence }) {
   const totalLoss =
     metrics.fifoLoss + metrics.expiryLoss + metrics.earlyRemovalLoss;
   const lossRows = [
-    { label: "FIFO loss", value: metrics.fifoLoss, className: "bg-red-500" },
+    { label: "FIFO Loss", value: metrics.fifoLoss, className: "bg-red-500" },
     {
-      label: "Expiry loss",
+      label: "Expiry Loss",
       value: metrics.expiryLoss,
       className: "bg-amber-500",
     },
     {
-      label: "Early removal",
+      label: "Early-Removal Loss",
       value: metrics.earlyRemovalLoss,
       className: "bg-sky-500",
     },
@@ -398,7 +401,7 @@ function OverviewTab({ intelligence }: { intelligence: ProductIntelligence }) {
         <CardHeader className="border-b px-5 py-4">
           <SectionHeader
             title="Operational Position"
-            description={`Live product position for ${intelligence.contextLabel}.`}
+            description={`Current product position for ${intelligence.contextLabel}.`}
           />
         </CardHeader>
         <CardContent className="grid gap-0 p-0 sm:grid-cols-2">
@@ -560,10 +563,17 @@ function BatchesTab({ intelligence }: { intelligence: ProductIntelligence }) {
                 className={cn(row.consumeFirst && "bg-primary/[0.025]")}
               >
                 <TableCell className="pl-5">
-                  <p className="text-xs font-semibold">{row.batch.lotNumber}</p>
-                  <p className="mt-0.5 text-[0.64rem] text-muted-foreground">
-                    {row.batch.id}
-                  </p>
+                  <Link
+                    to={`/batches?batch=${row.batch.id}`}
+                    className="group inline-flex flex-col"
+                  >
+                    <span className="text-xs font-semibold group-hover:text-primary">
+                      {row.batch.lotNumber}
+                    </span>
+                    <span className="mt-0.5 text-[0.64rem] text-muted-foreground group-hover:text-primary/80">
+                      {row.batch.id}
+                    </span>
+                  </Link>
                 </TableCell>
                 <TableCell className="text-xs">{row.branch.name}</TableCell>
                 <TableCell className="text-xs tabular-nums">
@@ -599,7 +609,7 @@ function BatchesTab({ intelligence }: { intelligence: ProductIntelligence }) {
                       </span>
                       <span className="text-xs">
                         {row.consumeFirst
-                          ? "Consume first"
+                          ? "Consume First"
                           : `Position ${row.fifoPosition}`}
                       </span>
                     </div>
@@ -717,12 +727,12 @@ function ExpiryTab({ intelligence }: { intelligence: ProductIntelligence }) {
   const events = [
     ...intelligence.expiryEvents.map((event) => ({
       ...event,
-      label: "Expiry loss",
+      label: "Expiry Loss",
       tone: "danger" as const,
     })),
     ...intelligence.earlyRemovalEvents.map((event) => ({
       ...event,
-      label: "Early removal",
+      label: "Early-Removal Loss",
       tone: "warning" as const,
     })),
   ].sort((a, b) => b.occurredAt.localeCompare(a.occurredAt));
@@ -904,7 +914,7 @@ function ActionsTab({ intelligence }: { intelligence: ProductIntelligence }) {
               </div>
               <p className="text-xs">{action.branch.name}</p>
               <p className="text-xs tabular-nums">
-                Due {formatDate(action.dueDate)}
+                Due {formatDate(action.dueAt)}
               </p>
               <ActionStatusBadge status={action.displayStatus} />
             </div>
@@ -976,7 +986,7 @@ function UntrackedProductState({
             </span>
             <h2 className="mt-5 text-lg font-semibold tracking-tight">
               {demoTracked
-                ? "Tracking configured for this demo"
+                ? "Tracking configured for this session"
                 : "Not tracked by NEMS"}
             </h2>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
@@ -1299,14 +1309,6 @@ function CatalogLine({
       </span>
     </div>
   );
-}
-
-function getVelocityLabel(velocity: number) {
-  return velocity >= 12
-    ? "High sales velocity"
-    : velocity >= 6
-    ? "Moderate sales velocity"
-    : "Low sales velocity";
 }
 
 function getAttentionTitle(intelligence: ProductIntelligence) {

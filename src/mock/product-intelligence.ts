@@ -15,6 +15,7 @@ import {
   type OperationalAction,
   type Product,
 } from "./nems-data";
+import { actionCenterItems } from "./action-center";
 
 export type ProductBatchStatus =
   | "open"
@@ -74,6 +75,7 @@ export type ProductIntelligence = {
     averageDailyVelocity: number;
     activeBatches: number;
     expiryExposure: number;
+    expiryExposureUnits: number;
     fifoLoss: number;
     fifoUnits: number;
     fifoLossRate: number;
@@ -91,7 +93,14 @@ export type ProductIntelligence = {
   fifoEvents: LossEvent[];
   expiryEvents: LossEvent[];
   earlyRemovalEvents: LossEvent[];
-  actions: Array<OperationalAction & { branch: Branch; displayStatus: string }>;
+  actions: Array<
+    OperationalAction & {
+      branch: Branch;
+      displayStatus: string;
+      createdAt: string;
+      dueAt: string;
+    }
+  >;
   history: ProductHistoryItem[];
   recurringExpiryLoss: boolean;
 };
@@ -138,7 +147,7 @@ function getHistory(
   fifoEvents: LossEvent[],
   expiryEvents: LossEvent[],
   earlyRemovalEvents: LossEvent[],
-  actions: OperationalAction[]
+  actions: ProductIntelligence["actions"]
 ) {
   const items: ProductHistoryItem[] = [];
 
@@ -230,7 +239,7 @@ function getHistory(
     const branch = branches.find((item) => item.id === action.branchId)!;
     items.push({
       id: `${action.id}-history`,
-      occurredAt: action.completedAt ?? action.dueDate,
+      occurredAt: action.completedAt ?? action.createdAt,
       branch,
       type: "action",
       title:
@@ -304,6 +313,26 @@ export function getProductIntelligence(
       action.productId === product.id &&
       intelligenceBranchIds.includes(action.branchId)
   );
+  const intelligenceActions: ProductIntelligence["actions"] = productActions
+    .map((action) => {
+      const canonicalAction = actionCenterItems.find(
+        (item) => item.id === action.id
+      );
+      return {
+        ...action,
+        completedAt: canonicalAction?.completedAt ?? action.completedAt,
+        branch: branches.find((branch) => branch.id === action.branchId)!,
+        displayStatus: getDisplayActionStatus(action),
+        createdAt:
+          canonicalAction?.createdAt ?? `${action.dueDate}T08:00:00`,
+        dueAt: canonicalAction?.dueAt ?? `${action.dueDate}T17:00:00`,
+      };
+    })
+    .sort((a, b) => {
+      if (a.status === "completed" && b.status !== "completed") return 1;
+      if (a.status !== "completed" && b.status === "completed") return -1;
+      return b.dueAt.localeCompare(a.dueAt);
+    });
 
   const batchRows = productBatches
     .map((batch) => {
@@ -385,6 +414,7 @@ export function getProductIntelligence(
     (total, batch) => total + batch.unitsOnHand * batch.unitCost,
     0
   );
+  const expiryExposureUnits = sumBatchUnits(expiryExposureBatches);
   const preventableExpiry = expiryEvents.reduce(
     (total, event) => total + event.value * event.preventablePercent,
     0
@@ -433,6 +463,7 @@ export function getProductIntelligence(
       averageDailyVelocity: Number(averageDailyVelocity.toFixed(1)),
       activeBatches: activeBatches.length,
       expiryExposure: Number(expiryExposure.toFixed(2)),
+      expiryExposureUnits,
       fifoLoss: Number(fifoLoss.toFixed(2)),
       fifoUnits,
       fifoLossRate:
@@ -460,24 +491,14 @@ export function getProductIntelligence(
     fifoEvents,
     expiryEvents,
     earlyRemovalEvents,
-    actions: productActions
-      .map((action) => ({
-        ...action,
-        branch: branches.find((branch) => branch.id === action.branchId)!,
-        displayStatus: getDisplayActionStatus(action),
-      }))
-      .sort((a, b) => {
-        if (a.status === "completed" && b.status !== "completed") return 1;
-        if (a.status !== "completed" && b.status === "completed") return -1;
-        return b.dueDate.localeCompare(a.dueDate);
-      }),
+    actions: intelligenceActions,
     history: getHistory(
       product,
       productBatches,
       fifoEvents,
       expiryEvents,
       earlyRemovalEvents,
-      productActions
+      intelligenceActions
     ),
     recurringExpiryLoss: expiryEvents.length >= 4 || expiryBranches.size >= 2,
   };
