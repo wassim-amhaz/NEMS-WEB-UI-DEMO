@@ -2,10 +2,7 @@ import {
   Bell,
   CalendarDays,
   ChevronDown,
-  CircleHelp,
-  LogOut,
   Search,
-  Settings,
 } from "lucide-react";
 
 import {
@@ -61,24 +58,22 @@ export const Header = () => {
       <div className="relative hidden max-w-xl flex-1 md:block">
       <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
       <Input
-        aria-label="Global search"
-        placeholder="Search products, batches, or actions..."
-        className="h-9 border-border/80 bg-background pl-9 pr-14 shadow-none"
+        aria-label="Search is available within each workspace"
+        placeholder="Use page search and filters..."
+        readOnly
+        tabIndex={-1}
+        className="h-9 cursor-default border-border/80 bg-background pl-9 shadow-none"
       />
-      <kbd className="pointer-events-none absolute right-2.5 top-1/2 hidden -translate-y-1/2 rounded border bg-muted px-1.5 py-0.5 font-sans text-[0.65rem] text-muted-foreground lg:inline-flex">
-        Ctrl K
-      </kbd>
       </div>
 
       <div className="ml-auto flex items-center gap-1 sm:gap-1.5">
-      <Button
-        variant="outline"
-        className="hidden h-9 gap-2 border-border/80 bg-background px-3 font-normal shadow-none lg:flex"
+      <div
+        aria-label="Default reporting period: Last 30 days"
+        className="hidden h-9 items-center gap-2 rounded-md border border-border/80 bg-background px-3 text-sm font-normal lg:flex"
       >
         <CalendarDays className="size-4 text-muted-foreground" />
         <span>Last 30 days</span>
-        <ChevronDown className="size-3.5 text-muted-foreground" />
-      </Button>
+      </div>
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -89,14 +84,13 @@ export const Header = () => {
             aria-label="Notifications"
           >
             <Bell className="size-[1.1rem]" />
-            <span className="absolute right-1.5 top-1.5 size-2 rounded-full bg-amber-500 ring-2 ring-card" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-72">
           <DropdownMenuLabel>Notifications</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <div className="px-3 py-5 text-center text-sm text-muted-foreground">
-            Operational alerts will appear here.
+            No new operational notifications.
           </div>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -130,19 +124,12 @@ export const Header = () => {
           <DropdownMenuLabel>
             <span className="block text-sm">Rana Mansour</span>
             <span className="block text-xs font-normal text-muted-foreground">
-              rana@nems.demo
+              rana.mansour@nems-ops.com
             </span>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem>
-            <Settings /> Preferences
-          </DropdownMenuItem>
-          <DropdownMenuItem>
-            <CircleHelp /> Help & support
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem className="text-destructive focus:text-destructive">
-            <LogOut /> Sign out
+          <DropdownMenuItem disabled className="text-xs">
+            NEMS Operations workspace
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

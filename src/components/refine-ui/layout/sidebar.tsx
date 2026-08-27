@@ -92,7 +92,8 @@ export function Sidebar() {
               <SidebarMenu className="gap-1">
                 {group.items.map((item) => {
                   const Icon = item.icon;
-                  const active = pathname === item.to;
+                  const active =
+                    pathname === item.to || pathname.startsWith(`${item.to}/`);
 
                   return (
                     <SidebarMenuItem key={item.to}>
@@ -125,9 +126,9 @@ export function Sidebar() {
             <span className="size-2 rounded-full bg-emerald-400 ring-4 ring-emerald-400/10" />
           </span>
           <span className="min-w-0 group-data-[collapsible=icon]:hidden">
-            <span className="block text-xs font-medium">Demo workspace</span>
+            <span className="block text-xs font-medium">NEMS workspace</span>
             <span className="block text-[0.68rem] text-sidebar-foreground/50">
-              UI foundation ready
+              Operational intelligence active
             </span>
           </span>
         </div>

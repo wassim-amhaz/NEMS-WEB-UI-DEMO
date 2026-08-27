@@ -4,7 +4,6 @@ import {
   Banknote,
   CalendarClock,
   CheckCircle2,
-  ChevronRight,
   CircleDollarSign,
   ClipboardCheck,
   Clock3,
@@ -24,7 +23,6 @@ import {
   StatusBadge,
 } from "@/components/nems/dashboard-ui";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   ChartContainer,
@@ -97,7 +95,7 @@ const chartConfig = {
   value: { label: "Loss value", color: "var(--chart-1)" },
   fifo: { label: "FIFO", color: "var(--chart-1)" },
   expiry: { label: "Expiry", color: "var(--chart-5)" },
-  early: { label: "Early removal", color: "var(--chart-4)" },
+  early: { label: "Early-Removal Loss", color: "var(--chart-4)" },
 } satisfies ChartConfig;
 
 export function OverviewPage() {
@@ -134,7 +132,7 @@ export function BranchCommandCenter() {
               variant="outline"
               className="rounded-md border-primary/20 bg-primary/5 text-[0.66rem] text-primary"
             >
-              Live demo view
+              Branch operating view
             </Badge>
           </div>
           <h1 className="text-2xl font-semibold tracking-tight sm:text-[1.75rem]">
@@ -340,10 +338,9 @@ function AttentionColumn({
           </div>
         ) : null}
         {items.length > 3 ? (
-          <Button variant="ghost" size="sm" className="h-7 w-full gap-1 text-xs text-muted-foreground">
-            {items.length - 3} more
-            <ChevronRight className="size-3" />
-          </Button>
+          <p className="pt-1 text-center text-xs text-muted-foreground">
+            +{items.length - 3} additional batches
+          </p>
         ) : null}
       </div>
     </div>
@@ -444,7 +441,7 @@ function AvoidableLossCard({ data }: AvoidableLossCardProps) {
       className: "bg-violet-500",
     },
     {
-      label: "Preventable expiry",
+      label: "Preventable Expiry Loss",
       value: data.preventableExpiry,
       className: "bg-amber-500",
     },

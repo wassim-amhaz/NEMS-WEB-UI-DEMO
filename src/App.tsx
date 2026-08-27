@@ -3,7 +3,6 @@ import routerProvider, {
   DocumentTitleHandler,
   UnsavedChangesNotifier,
 } from "@refinedev/react-router";
-import { BarChart3 } from "lucide-react";
 import { BrowserRouter, Navigate, Outlet, Route, Routes } from "react-router";
 
 import "./App.css";
@@ -14,7 +13,7 @@ import { OverviewPage } from "./pages/overview";
 import { ActionCenterPage } from "./pages/actions";
 import { BatchesPage } from "./pages/batches";
 import { AuditsPage } from "./pages/audits";
-import { PlaceholderPage } from "./pages/placeholder-page";
+import { AnalyticsPage } from "./pages/analytics";
 import { ProductIntelligencePage } from "./pages/products/detail";
 import { MasterProductsPage } from "./pages/products";
 
@@ -22,7 +21,12 @@ const resources = [
   { name: "overview", list: "/overview", meta: { label: "Overview" } },
   { name: "actions", list: "/actions", meta: { label: "Action Center" } },
   { name: "batches", list: "/batches", meta: { label: "Batches" } },
-  { name: "products", list: "/products", meta: { label: "Products" } },
+  {
+    name: "products",
+    list: "/products",
+    show: "/products/:id",
+    meta: { label: "Products" },
+  },
   { name: "analytics", list: "/analytics", meta: { label: "Analytics" } },
   { name: "audits", list: "/audits", meta: { label: "Audits" } },
 ];
@@ -55,17 +59,7 @@ function App() {
                 <Route index element={<MasterProductsPage />} />
                 <Route path=":id" element={<ProductIntelligencePage />} />
               </Route>
-              <Route
-                path="/analytics"
-                element={
-                  <PlaceholderPage
-                    icon={BarChart3}
-                    eyebrow="Intelligence"
-                    title="Analytics"
-                    description="A reporting surface for loss trends, expiry risk, FIFO adherence, and operational outcomes."
-                  />
-                }
-              />
+              <Route path="/analytics" element={<AnalyticsPage />} />
               <Route path="/audits" element={<AuditsPage />} />
               <Route path="*" element={<Navigate to="/overview" replace />} />
             </Route>

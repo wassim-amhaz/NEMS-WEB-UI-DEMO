@@ -484,6 +484,14 @@ export const batches: Batch[] = branches.flatMap((branch, branchIndex) =>
         ? offsets[productIndex % offsets.length]
         : 18 + ((productIndex * 11 + branchIndex * 17) % 95);
     const removalDate = shiftDate(DEMO_TODAY, offset);
+    const plannedReceivedDate = shiftDate(
+      removalDate,
+      -11 - (productIndex % 7)
+    );
+    const receivedDate =
+      plannedReceivedDate > DEMO_TODAY
+        ? shiftDate(DEMO_TODAY, -(productIndex % 6))
+        : plannedReceivedDate;
     const velocity = product.salesVelocity[branch.id];
     const initialUnits = Math.max(18, Math.round(velocity * (8 + (productIndex % 5))));
     const unitsOnHand =
@@ -501,7 +509,7 @@ export const batches: Batch[] = branches.flatMap((branch, branchIndex) =>
       branchId: branch.id,
       productId: product.id,
       lotNumber: `L${260700 + branchIndex * 100 + productIndex}`,
-      receivedDate: shiftDate(removalDate, -11 - (productIndex % 7)),
+      receivedDate,
       expiryDate: shiftDate(removalDate, product.removeBeforeDays ?? 0),
       removalDate,
       initialUnits,

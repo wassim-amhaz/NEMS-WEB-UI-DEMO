@@ -20,8 +20,10 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { toast } from "sonner";
+import { Link } from "react-router";
 
 import { ALL_BRANCHES_ID, useBranch } from "@/components/nems/branch-context";
+import { useActionResolutions } from "@/components/nems/action-resolution-context";
 import { SectionHeader } from "@/components/nems/dashboard-ui";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -84,7 +86,8 @@ function formatDateTime(value: string | undefined) {
 }
 
 export function ActionCenterPage() {
-  const { selectedBranchId } = useBranch();
+  const { selectedBranchId, setSelectedBranchId } = useBranch();
+  const { resolvedActions, resolveAction } = useActionResolutions();
   const [branchFilter, setBranchFilter] = useState(selectedBranchId);
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
@@ -95,16 +98,13 @@ export function ActionCenterPage() {
   const [selectedAction, setSelectedAction] = useState<ActionCenterItem | null>(
     null
   );
-  const [resolvedActionIds, setResolvedActionIds] = useState<Set<string>>(
-    () => new Set()
-  );
 
   useEffect(() => {
     setBranchFilter(selectedBranchId);
   }, [selectedBranchId]);
 
   const isCompleted = (action: ActionCenterItem) =>
-    action.status === "completed" || resolvedActionIds.has(action.id);
+    action.status === "completed" || Boolean(resolvedActions[action.id]);
   const getTiming = (action: ActionCenterItem): ActionTiming =>
     isCompleted(action) ? "completed" : action.timing;
 
@@ -179,7 +179,7 @@ export function ActionCenterPage() {
   ).length;
   const completedActions = scopedActions.filter(isCompleted);
   const onTimeCompleted = completedActions.filter((action) => {
-    if (resolvedActionIds.has(action.id)) return action.timing !== "overdue";
+    if (resolvedActions[action.id]) return action.timing !== "overdue";
     return Boolean(action.completedAt && action.completedAt <= action.dueAt);
   }).length;
   const actionCompliance =
@@ -233,7 +233,7 @@ export function ActionCenterPage() {
           variant="outline"
           className="w-fit rounded-md border-primary/20 bg-primary/5 px-2.5 py-1 text-primary"
         >
-          {scopeLabel} · {openActions.length} open actions
+          {scopeLabel} · {formatActionCount(openActions.length, "open")}
         </Badge>
       </div>
 
@@ -366,7 +366,10 @@ export function ActionCenterPage() {
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[repeat(3,minmax(10rem,0.42fr))_1fr]">
             <FilterSelect
               value={branchFilter}
-              onValueChange={setBranchFilter}
+              onValueChange={(value) => {
+                setBranchFilter(value);
+                setSelectedBranchId(value);
+              }}
               placeholder="Branch"
               items={[
                 { value: ALL_BRANCHES_ID, label: "All Branches" },
@@ -424,7 +427,7 @@ export function ActionCenterPage() {
               Operational Work Queue
             </h2>
             <p className="mt-1 text-xs text-muted-foreground">
-              {filteredActions.length} actions · {scopeLabel}
+              {formatActionCount(filteredActions.length)} · {scopeLabel}
             </p>
           </div>
           <Badge variant="secondary" className="rounded-md">
@@ -561,8 +564,8 @@ export function ActionCenterPage() {
         action={selectedAction}
         completed={selectedAction ? isCompleted(selectedAction) : false}
         onOpenChange={(open) => !open && setSelectedAction(null)}
-        onResolve={(action) => {
-          setResolvedActionIds((current) => new Set(current).add(action.id));
+        onResolve={(action, resolution) => {
+          resolveAction(action.id, resolution.outcome, resolution.note);
           setSelectedAction(null);
           toast.success(`${action.typeLabel} completed`, {
             description: `${action.product.name} · ${action.branch.name}`,
@@ -616,7 +619,10 @@ function ActionDetailsSheet({
   action: ActionCenterItem | null;
   completed: boolean;
   onOpenChange: (open: boolean) => void;
-  onResolve: (action: ActionCenterItem) => void;
+  onResolve: (
+    action: ActionCenterItem,
+    resolution: { outcome: string; note?: string }
+  ) => void;
 }) {
   const [quantity, setQuantity] = useState("");
   const [expiryDate, setExpiryDate] = useState("");
@@ -695,6 +701,13 @@ function ActionDetailsSheet({
               />
             </div>
 
+            <Button asChild variant="outline" className="w-full gap-2 sm:w-fit">
+              <Link to={`/products/${action.product.id}`}>
+                <PackageCheck className="size-4" />
+                View Product Intelligence
+              </Link>
+            </Button>
+
             <ExplanationSection eyebrow="WHY NEMS CREATED THIS">
               <p className="text-sm leading-6 text-foreground/85">
                 {action.why}
@@ -754,7 +767,18 @@ function ActionDetailsSheet({
           <SheetFooter className="border-t bg-background px-5 py-4">
             <Button
               disabled={!valid}
-              onClick={() => onResolve(action)}
+              onClick={() =>
+                onResolve(action, {
+                  outcome: getResolutionOutcome(
+                    action,
+                    quantity,
+                    expiryDate,
+                    fifoResult,
+                    candidateBatchId
+                  ),
+                  note: notes,
+                })
+              }
               className="w-full gap-2"
             >
               <CheckCircle2 className="size-4" />
@@ -1166,6 +1190,39 @@ function getResolutionValidity(
   if (action.type === "fifo-verification") return Boolean(fifoResult);
   if (action.type === "unassigned-decrement") return Boolean(candidateBatchId);
   return true;
+}
+
+function formatActionCount(count: number, qualifier?: string) {
+  const descriptor = qualifier ? ` ${qualifier}` : "";
+  return `${count}${descriptor} action${count === 1 ? "" : "s"}`;
+}
+
+function getResolutionOutcome(
+  action: ActionCenterItem,
+  quantity: string,
+  expiryDate: string,
+  fifoResult: string,
+  candidateBatchId: string
+) {
+  if (action.type === "expiry-removal")
+    return `${Number(quantity)} units removed and confirmed.`;
+  if (action.type === "recount")
+    return `Physical count confirmed at ${Number(quantity)} units.`;
+  if (action.type === "missing-batch-information")
+    return `Batch information confirmed: ${Number(quantity)} units, expiry ${expiryDate}.`;
+  if (action.type === "transfer-arrival")
+    return `Transfer arrival confirmed: ${Number(quantity)} units, expiry ${expiryDate}.`;
+  if (action.type === "fifo-verification") {
+    if (fifoResult === "correct") return "FIFO sequence verified as correct.";
+    if (fifoResult === "violation")
+      return "FIFO violation confirmed during physical verification.";
+    return "Physical FIFO sequence could not be verified.";
+  }
+  if (action.type === "unassigned-decrement")
+    return candidateBatchId === "escalate"
+      ? "Unassigned decrement escalated for supervisor review."
+      : `Unassigned decrement linked to ${candidateBatchId}.`;
+  return "Operational check completed.";
 }
 
 function getResolutionButtonLabel(type: ActionCenterType) {

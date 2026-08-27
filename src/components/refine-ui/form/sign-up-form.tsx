@@ -105,7 +105,7 @@ export const SignUpForm = () => {
           <CardDescription
             className={cn("text-muted-foreground", "font-medium")}
           >
-            Welcome to lorem ipsum dolor.
+            Create your NEMS workspace account.
           </CardDescription>
         </CardHeader>
 
